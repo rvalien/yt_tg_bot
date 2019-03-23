@@ -1,0 +1,12 @@
+# List of required packages (Dependencies)
+certifi>=2018.11.29
+chardet>=3.0.4
+idna>=2.8
+pyTelegramBotAPI>=3.6.6
+requests>=2.7.0
+six>=1.12.0
+telebot>=0.0.3
+urllib3>=1.24.1
+aiogram>=2.0.1
+beautifulsoup4>=4.7
+bs4>=0.0.1
