@@ -1,6 +1,7 @@
 import os
 import asyncio
 import sqlite3
+import datetime
 
 from aiogram import Bot, types
 from aiogram.utils import executor
@@ -37,15 +38,6 @@ finally:
     conn.commit()
     conn.close()
 
-# if len(chat_ids) == 0 or subscribers == 0:
-#     conn = sqlite3.connect(db_name)
-#     cursor = conn.cursor()
-#     cursor.execute('select chat_id from chat_ids')
-#     for item in cursor.fetchall():
-#         chat_ids.append(item[0])
-#     cursor.execute('select subscribers from detectivo')
-#     subscribers = cursor.fetchall()[0][0]
-#     conn.close()
 
 markup = types.ReplyKeyboardMarkup()
 markup.row('/youtube')
@@ -74,23 +66,31 @@ async def send_welcome(message):
 
 
 async def auto_yt_check():
-    current_subs, current_view = get_yt_info(youtube_token)
-    conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-    cursor.execute('select subscribers from detectivo')
-    db_subs = cursor.fetchall()[0][0]
-    print(current_subs, db_subs)
-    if current_subs == db_subs:
-        print('не делаем ничего')
-        conn.close()
-        pass
+    now = datetime.datetime.now().time()
+    night_from = datetime.time(23)
+    night_to = datetime.time(7)
+
+    if night_to < now < night_from:
+        current_subs, current_view = get_yt_info(youtube_token)
+        conn = sqlite3.connect(db_name)
+        cursor = conn.cursor()
+        cursor.execute('select subscribers from detectivo')
+        db_subs = cursor.fetchall()[0][0]
+        print(current_subs, db_subs)
+        if current_subs == db_subs:
+            print('не делаем ничего')
+            conn.close()
+            pass
+        else:
+            print('отправка')
+            for chat_id in chat_ids:
+                await bot.send_message(chat_id, printer(current_subs, current_view))
+            cursor.execute(f'UPDATE detectivo SET subscribers = {current_subs}')
+            conn.commit()
+            conn.close()
     else:
-        print('отправка')
-        for chat_id in chat_ids:
-            await bot.send_message(chat_id, printer(current_subs, current_view))
-        cursor.execute(f'UPDATE detectivo SET subscribers = {current_subs}')
-        conn.commit()
-        conn.close()
+        print(now)
+        pass
 
 
 def repeat(coro, loop):
