@@ -67,8 +67,8 @@ async def send_welcome(message):
 
 async def auto_yt_check():
     now = datetime.datetime.now().time()
-    night_from = datetime.time(23)
-    night_to = datetime.time(7)
+    night_from = datetime.time(22)
+    night_to = datetime.time(8)
 
     if night_to < now < night_from:
         current_subs, current_view = get_yt_info(youtube_token)
@@ -91,7 +91,6 @@ async def auto_yt_check():
     else:
         print(now)
         pass
-
 
 
 def repeat(coro, loop):
