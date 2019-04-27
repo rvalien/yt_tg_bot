@@ -18,7 +18,7 @@ weather_token = os.environ['WEATHER_TOKEN']
 bot = Bot(token=telegram_token)
 dp = Dispatcher(bot)
 db_name = 'bot.db'
-delay = 300
+delay = 1800
 conn = sqlite3.connect(db_name)
 cursor = conn.cursor()
 
@@ -67,8 +67,8 @@ async def send_welcome(message):
 
 async def auto_yt_check():
     now = datetime.datetime.now().time()
-    night_from = datetime.time(22)
-    night_to = datetime.time(8)
+    night_from = datetime.time(19)
+    night_to = datetime.time(5)
 
     if night_to < now < night_from:
         current_subs, current_view = get_yt_info(youtube_token)
