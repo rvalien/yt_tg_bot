@@ -86,7 +86,9 @@ async def auto_yt_check():
             for chat_id in chat_ids:
                 await bot.send_message(chat_id, printer(current_subs, current_view))
             cursor.execute(f'UPDATE detectivo SET subscribers = {current_subs}')
+            print('тут мы делаем коммит')
             conn.commit()
+            print('закрываем соединение')
             conn.close()
     else:
         print(now)
