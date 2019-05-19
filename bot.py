@@ -9,7 +9,7 @@ from aiogram.dispatcher import Dispatcher
 from utils import get_yt_info, printer, get_weather
 import ikea
 
-# from config import *
+from config import *
 
 telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
@@ -18,7 +18,16 @@ weather_token = os.environ['WEATHER_TOKEN']
 bot = Bot(token=telegram_token)
 dp = Dispatcher(bot)
 db_name = 'bot.db'
-delay = 1800
+
+delay = 3600
+night_from = datetime.time(19)
+night_to = datetime.time(5)
+#
+# delay = 60
+# night_from = datetime.time(19)
+# night_to = datetime.time(5)
+#
+
 conn = sqlite3.connect(db_name)
 cursor = conn.cursor()
 
@@ -67,9 +76,6 @@ async def send_welcome(message):
 
 async def auto_yt_check():
     now = datetime.datetime.now().time()
-    night_from = datetime.time(19)
-    night_to = datetime.time(5)
-
     if night_to < now < night_from:
         current_subs, current_view = get_yt_info(youtube_token)
         conn = sqlite3.connect(db_name)
