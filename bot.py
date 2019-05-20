@@ -1,4 +1,5 @@
 import os
+import sys
 import asyncio
 import sqlite3
 import datetime
@@ -9,7 +10,8 @@ from aiogram.dispatcher import Dispatcher
 from utils import get_yt_info, printer, get_weather
 import ikea
 
-from config import *
+if sys.platform == 'win32':
+    from config import *
 
 telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
