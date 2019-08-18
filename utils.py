@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import requests
-
+import psycopg2
 
 def printer(subs, views):
     s1 = "{:,d}".format(subs) + " подписчиков! 🍾🎉🍾"
@@ -25,6 +25,14 @@ def printer(subs, views):
 #     cursor = conn.cursor()
 #     cursor.execute(f"insert into rhyme (name, rhyme) values('{name}', '{rhyme}')")
 #     conn.commit()
+
+
+def show_day_statistic(database):
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
+    cursor.execute(f'''select * from detektivo''')
+    res = cursor.fetchall()
+    return res
 
 
 def get_yt_info(youtube_token, c_id='UCawxRTnNrCPlXHJRttupImA'):

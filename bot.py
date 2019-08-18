@@ -8,7 +8,7 @@ import datetime
 from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.dispatcher import Dispatcher
-from utils import get_yt_info, printer, get_weather
+from utils import get_yt_info, printer, get_weather, show_day_statistic
 from random import randint
 import ikea
 
@@ -82,6 +82,11 @@ async def send_welcome(message):
     await message.reply(ikea.main())
 
 
+@dp.message_handler(commands=['statistic'])
+async def send_welcome(message):
+    await message.reply(str(show_day_statistic(database)))
+
+
 async def auto_yt_check():
     now = datetime.datetime.now().time()
     if night_to < now < night_from:
@@ -102,15 +107,33 @@ async def auto_yt_check():
             cursor.execute(f'UPDATE detectivo SET subscribers = {current_subs}')
             conn.commit()
             conn.close()
-
-            conn_pos = psycopg2.connect(database)
-            cursor_pos = conn_pos.cursor()
-            cursor_pos.execute(f'UPDATE detectivo SET subscribers = {current_subs}, views = {current_view}')
-            conn_pos.commit()
-            conn_pos.close()
     else:
         print(now)
         pass
+
+
+async def auto_yt_check_postgress():
+    now = datetime.datetime.now().time()
+    current_subs, current_view = get_yt_info(youtube_token)
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
+    cursor.execute('select * from detektivo where datetime = (select max(datetime) from detektivo)')
+
+    db_subs = cursor.fetchall()
+    if len(db_subs) != 0 and db_subs[0][0] == current_subs:
+        db_subs = db_subs[0][0]
+        print(current_subs, db_subs)
+        print('не делаем ничего')
+        conn.close()
+        pass
+    else:
+        print('отправка')
+        # for chat_id in chat_ids:
+        #     await bot.send_message(chat_id, printer(current_subs, current_view))
+        cursor.execute(f'''insert into detektivo (subscribers, views, datetime)
+                            values('{current_subs}', '{current_view}', now())''')
+        conn.commit()
+        conn.close()
 
 
 # async def yt_daily_stats():
@@ -153,5 +176,6 @@ def repeat(coro, loop):
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.call_later(delay, repeat, auto_yt_check, loop)
+    loop.call_later(delay, repeat, auto_yt_check_postgress, loop)
     loop.call_later(delay, repeat, auto_ikea_check, loop)
     asyncio.run(executor.start_polling(dp, loop=loop))
