@@ -118,44 +118,22 @@ async def auto_yt_check_postgress():
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
     cursor.execute('select * from detektivo where datetime = (select max(datetime) from detektivo)')
-
     db_subs = cursor.fetchall()
-    if len(db_subs) != 0 and db_subs[0][0] == current_subs:
-        db_subs = db_subs[0][0]
-        print(current_subs, db_subs)
-        print('не делаем ничего')
-        conn.close()
-        pass
-    else:
-        print('отправка')
-        # for chat_id in chat_ids:
-        #     await bot.send_message(chat_id, printer(current_subs, current_view))
-        cursor.execute(f'''insert into detektivo (subscribers, views, datetime)
-                            values('{current_subs}', '{current_view}', now())''')
-        conn.commit()
-        conn.close()
+    cursor.execute(f'''insert into detektivo (subscribers, views, datetime)
+                        values('{current_subs}', '{current_view}', now())''')
+    conn.commit()
+    conn.close()
 
-
-# async def yt_daily_stats():
-#     now = datetime.datetime.now().time()
-#     if night_to < now < night_from:
-#         current_subs, current_view = get_yt_info(youtube_token)
-#         conn = sqlite3.connect(db_name)
-#         cursor = conn.cursor()
-#
-#             pass
-#         else:
-#             print('отправка')
-#             for chat_id in chat_ids:
-#                 await bot.send_message(chat_id, printer(current_subs, current_view))
-#             cursor.execute(f'UPDATE detectivo SET subscribers = {current_subs}')
-#             print('тут мы делаем коммит')
-#             conn.commit()
-#             print('закрываем соединение')
-#             conn.close()
-#     else:
-#         print(now)
-#         pass
+    if night_to < now < night_from:
+        if len(db_subs) != 0 and db_subs[0][0] == current_subs:
+            db_subs = db_subs[0][0]
+            print(current_subs, db_subs)
+            print('не делаем ничего')
+            pass
+        else:
+            print('отправка')
+            for chat_id in chat_ids:
+                await bot.send_message(chat_id, printer(current_subs, current_view))
 
 
 async def auto_ikea_check():
@@ -175,7 +153,7 @@ def repeat(coro, loop):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    loop.call_later(delay, repeat, auto_yt_check, loop)
+    # loop.call_later(delay, repeat, auto_yt_check, loop)
     loop.call_later(delay, repeat, auto_yt_check_postgress, loop)
     loop.call_later(delay, repeat, auto_ikea_check, loop)
     asyncio.run(executor.start_polling(dp, loop=loop))

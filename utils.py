@@ -3,6 +3,7 @@ import os
 import requests
 import psycopg2
 
+
 def printer(subs, views):
     s1 = "{:,d}".format(subs) + " подписчиков! 🍾🎉🍾"
     s2 = "{:,d}".format(views) + " просмотов! 🎈🎈🎈"
