@@ -40,12 +40,12 @@ conn = sqlite3.connect(db_name)
 cursor = conn.cursor()
 
 chat_ids = []
-cursor.execute('select chat_id from chat_ids')
-for item in cursor.fetchall():
+cursor_pos.execute('select chat_id from chat_ids')
+for item in cursor_pos.fetchall():
     chat_ids.append(item[0])
 
 try:
-    cursor.execute('select subscribers from detectivo')
+    cursor_pos.execute('select subscribers from detektivo where datetime = (select max(datetime) from detektivo)')
     subscribers = cursor.fetchall()[0][0]
 except sqlite3.OperationalError:
     cursor.execute("""CREATE TABLE detectivo (subscribers int) """)
@@ -69,7 +69,8 @@ async def send_welcome(message: types.Message):
 
 @dp.message_handler(commands=['youtube'])
 async def send_welcome(message):
-    await message.reply(printer(*get_yt_info(youtube_token)))
+    # await message.reply(printer(*get_yt_info(youtube_token)))
+    await message.reply('возврат оформи на туфли')
 
 
 @dp.message_handler(commands=['weather'])
