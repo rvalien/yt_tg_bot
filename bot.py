@@ -51,6 +51,7 @@ conn_pos.close()
 
 markup = types.ReplyKeyboardMarkup()
 markup.row('/youtube')
+markup.row('/statistic')
 markup.row('/weather')
 markup.row('/ikea')
 
