@@ -36,25 +36,18 @@ night_to = datetime.time(5)
 conn_pos = psycopg2.connect(database)
 cursor_pos = conn_pos.cursor()
 
-conn = sqlite3.connect(db_name)
-cursor = conn.cursor()
+# conn = sqlite3.connect(db_name)
+# cursor = conn.cursor()
 
 chat_ids = []
 cursor_pos.execute('select chat_id from chat_ids')
 for item in cursor_pos.fetchall():
     chat_ids.append(item[0])
 
-try:
-    cursor_pos.execute('select subscribers from detektivo where datetime = (select max(datetime) from detektivo)')
-    subscribers = cursor.fetchall()[0][0]
-except sqlite3.OperationalError:
-    cursor.execute("""CREATE TABLE detectivo (subscribers int) """)
-    cursor.execute(f'insert into detectivo values({1000})')
-finally:
-    subscribers = 1
-    conn.commit()
-    conn.close()
-
+cursor_pos.execute('select subscribers from detektivo where datetime = (select max(datetime) from detektivo)')
+subscribers = cursor_pos.fetchall()
+subscribers = subscribers[0][0]
+conn_pos.close()
 
 markup = types.ReplyKeyboardMarkup()
 markup.row('/youtube')
@@ -156,5 +149,5 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     # loop.call_later(delay, repeat, auto_yt_check, loop)
     loop.call_later(delay, repeat, auto_yt_check_postgress, loop)
-    loop.call_later(delay, repeat, auto_ikea_check, loop)
+    # loop.call_later(delay, repeat, auto_ikea_check, loop)
     asyncio.run(executor.start_polling(dp, loop=loop))
