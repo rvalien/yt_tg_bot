@@ -11,3 +11,4 @@ aiogram>=2.0.1
 beautifulsoup4>=4.7
 bs4>=0.0.1
 psycopg2>=2.8.3
+pandas>=0.25.0

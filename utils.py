@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import pandas as pd
 import requests
 import psycopg2
 
@@ -32,8 +33,13 @@ def show_day_statistic(database):
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
     cursor.execute(f'''select * from detektivo''')
-    res = cursor.fetchall()
-    return res
+    df = pd.read_sql('select * from detektivo', conn)
+    today = df[df['datetime'].dt.date == pd.Timestamp.now().date()].sort_values(by='datetime')
+    today = today.assign(datetime=today['datetime'].values.astype('datetime64[s]'))
+    today = today.assign(time=today['datetime'].dt.time)
+    stat_text = f"""сегодня, в период с {today.iloc[0]['datetime'].hour} по {today.iloc[-1]['datetime'].hour}
+    подписалось {today.iloc[-1]['subscribers'] - today.iloc[0]['subscribers']} человек"""
+    return stat_text
 
 
 def get_yt_info(youtube_token, c_id='UCawxRTnNrCPlXHJRttupImA'):

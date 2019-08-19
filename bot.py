@@ -62,8 +62,8 @@ async def send_welcome(message: types.Message):
 
 @dp.message_handler(commands=['youtube'])
 async def send_welcome(message):
-    # await message.reply(printer(*get_yt_info(youtube_token)))
-    await message.reply('возврат оформи на туфли')
+    await message.reply(printer(*get_yt_info(youtube_token)))
+    # await message.reply('возврат оформи на туфли')
 
 
 @dp.message_handler(commands=['weather'])
