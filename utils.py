@@ -36,8 +36,20 @@ def show_day_statistic(database):
     today = df[df['datetime'].dt.date == pd.Timestamp.now().date()].sort_values(by='datetime')
     today = today.assign(datetime=today['datetime'].values.astype('datetime64[s]'))
     today = today.assign(time=today['datetime'].dt.time)
-    stat_text = f"""сегодня, в период с {today.iloc[0]['datetime'].hour} по {today.iloc[-1]['datetime'].hour}
-    подписалось {today.iloc[-1]['subscribers'] - today.iloc[0]['subscribers']} человек"""
+
+    today = today.assign(subscribers_shifted=today['subscribers'].shift(1),
+                         views_shifted=today['views'].shift(1))
+
+    today = today.assign(subscribers_hourly=today['subscribers'] - today['subscribers_shifted'],
+                         views_hourly=today['views'] - today['views_shifted'])
+
+    max_sub = today.loc[today['subscribers_hourly'] == today['subscribers_hourly'].max()]['time'].tolist()[0]
+    max_view = today.loc[today['views_hourly'] == today['views_hourly'].max()]['time'].tolist()[0]
+
+    stat_text = f"""
+    Сегодня, в период с {today.iloc[0]['datetime'].hour} по {today.iloc[-1]['datetime'].hour}
+    подписалось *{today.iloc[-1]['subscribers'] - today.iloc[0]['subscribers']}* человек.
+    Больше всего просмотров было в {max_view.hour} часов, а подписок в {max_sub.hour} часов."""
     return stat_text
 
 
