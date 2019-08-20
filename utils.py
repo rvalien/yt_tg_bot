@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import requests
 import psycopg2
-
+import datetime
 
 def printer(subs, views):
     s1 = "{:,d}".format(subs) + " подписчиков! 🍾🎉🍾"
@@ -32,7 +32,7 @@ def printer(subs, views):
 def show_day_statistic(database):
     conn = psycopg2.connect(database)
     df = pd.read_sql('select * from detektivo', conn)
-    df = df.assign(datetime=df['datetime'] + df.timedelta(minutes=180))  # так мы хитро получаем московское время.
+    df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
     today = df[df['datetime'].dt.date == pd.Timestamp.now().date()].sort_values(by='datetime')
     today = today.assign(datetime=today['datetime'].values.astype('datetime64[s]'))
     today = today.assign(time=today['datetime'].dt.time)
