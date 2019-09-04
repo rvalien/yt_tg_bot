@@ -8,7 +8,7 @@ import datetime
 from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.dispatcher import Dispatcher
-from utils import get_yt_info, printer, get_weather, show_day_statistic
+from utils import get_yt_info, printer, get_weather, show_day_statistic, get_gbs_left, print_gb_info
 from random import randint
 import ikea
 
@@ -26,6 +26,9 @@ telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
 weather_token = os.environ['WEATHER_TOKEN']
 database = os.environ['DATABASE_URL']
+mob_l = os.environ['STS_LOGIN']
+mob_p = os.environ['STS_PASSWORD']
+
 
 bot = Bot(token=telegram_token)
 dp = Dispatcher(bot)
@@ -54,6 +57,7 @@ markup.row('/youtube')
 markup.row('/statistic')
 markup.row('/weather')
 markup.row('/ikea')
+markup.row('/mobile_internet')
 
 
 @dp.message_handler(commands=['start', 'help'])
@@ -80,6 +84,11 @@ async def send_welcome(message):
 @dp.message_handler(commands=['statistic'])
 async def send_welcome(message):
     await message.reply(str(show_day_statistic(database)))
+
+
+@dp.message_handler(commands=['mobile_internet'])
+async def send_welcome(message):
+    await message.reply(str(print_gb_info(get_gbs_left(mob_l, mob_p))))
 
 
 async def auto_yt_check():
