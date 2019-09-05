@@ -1,7 +1,6 @@
 import os
 import sys
 import asyncio
-import sqlite3
 import psycopg2
 import datetime
 
@@ -9,7 +8,6 @@ from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.dispatcher import Dispatcher
 from utils import get_yt_info, printer, get_weather, show_day_statistic, get_gbs_left, print_gb_info
-from random import randint
 import ikea
 
 
@@ -19,15 +17,12 @@ delay = 3600
 if sys.platform == 'win32':
     from config import *
     print('локальненько в тестовом режимчике')
-    db_name = 'bot_test.db'
-    delay = 10
+    delay = 3600
 
 telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
 weather_token = os.environ['WEATHER_TOKEN']
 database = os.environ['DATABASE_URL']
-mob_l = os.environ['STS_LOGIN']
-mob_p = os.environ['STS_PASSWORD']
 
 
 bot = Bot(token=telegram_token)
@@ -88,35 +83,14 @@ async def send_welcome(message):
 
 @dp.message_handler(commands=['mobile_internet'])
 async def send_welcome(message):
-    await message.reply(str(print_gb_info(get_gbs_left(mob_l, mob_p))))
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
+    cursor.execute(f"select phone, password from ststel where chat_id = {message['from']['id']}")
+    res = cursor.fetchone()
+    await message.reply(str(print_gb_info(get_gbs_left(*res))))
 
 
 async def auto_yt_check():
-    now = datetime.datetime.now().time()
-    if night_to < now < night_from:
-        current_subs, current_view = get_yt_info(youtube_token)
-        conn = sqlite3.connect(db_name)
-        cursor = conn.cursor()
-        cursor.execute('select subscribers from detectivo')
-        db_subs = cursor.fetchall()[0][0]
-        print(current_subs, db_subs)
-        if current_subs == db_subs:
-            print('не делаем ничего')
-            conn.close()
-            pass
-        else:
-            print('отправка')
-            for chat_id in chat_ids:
-                await bot.send_message(chat_id, printer(current_subs, current_view))
-            cursor.execute(f'UPDATE detectivo SET subscribers = {current_subs}')
-            conn.commit()
-            conn.close()
-    else:
-        print(now)
-        pass
-
-
-async def auto_yt_check_postgress():
     now = datetime.datetime.now().time()
     current_subs, current_view = get_yt_info(youtube_token)
     conn = psycopg2.connect(database)
@@ -157,7 +131,5 @@ def repeat(coro, loop):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    # loop.call_later(delay, repeat, auto_yt_check, loop)
-    loop.call_later(delay, repeat, auto_yt_check_postgress, loop)
-    # loop.call_later(delay, repeat, auto_ikea_check, loop)
+    loop.call_later(delay, repeat, auto_yt_check, loop)
     asyncio.run(executor.start_polling(dp, loop=loop))

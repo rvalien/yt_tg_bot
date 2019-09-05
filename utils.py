@@ -1,32 +1,14 @@
 # -*- coding: utf-8 -*-
-import os
 import pandas as pd
 import requests
 import psycopg2
 import datetime
 
+
 def printer(subs, views):
     s1 = "{:,d}".format(subs) + " подписчиков! 🍾🎉🍾"
     s2 = "{:,d}".format(views) + " просмотов! 🎈🎈🎈"
     return f'{s1}\n{s2}'
-
-
-# def get_rhyme():
-#     conn = sqlite3.connect("mydatabase.db")  # или :memory: чтобы сохранить в RAM
-#     cursor = conn.cursor()
-#     cursor.execute('SELECT name, rhyme FROM "rhyme"')  # все таблицы
-#     items = cursor.fetchall()
-#     # print(items)
-#     # print(len(items))
-#     rand_max = len(items) - 1
-#     return items[randint(0, rand_max)]
-
-
-# def add_rhyme(name, rhyme):
-#     conn = sqlite3.connect("mydatabase.db")  # или :memory: чтобы сохранить в RAM
-#     cursor = conn.cursor()
-#     cursor.execute(f"insert into rhyme (name, rhyme) values('{name}', '{rhyme}')")
-#     conn.commit()
 
 
 def show_day_statistic(database):
@@ -82,7 +64,7 @@ def get_gbs_left(login: str, password: str)-> dict:
     header={
         "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0"}
-    payload = {'phone': login, 'pass': password}
+    payload = {'phone': str(login), 'pass': str(password)}
     a, b = 0, 0
     i = 0
     with requests.Session() as s:
@@ -115,5 +97,3 @@ def print_gb_info(data: dict) -> str:
 
 if __name__ == '__main__':
     pass
-    # print(get_gbs_left(STS_LOGIN, STS_PASSWORD))
-    # print(print_gb_info(get_gbs_left(STS_LOGIN, STS_PASSWORD)))
