@@ -88,8 +88,9 @@ async def send_welcome(message):
 async def send_welcome(message):
 
     media = types.MediaGroup()
-    text = show_day_statistic(database)
-    media.attach_photo(types.InputFile('data/stat.png'), text)
+    file ='stat.png'
+    text = show_day_statistic(database, path=file)
+    media.attach_photo(types.InputFile(file), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
 
