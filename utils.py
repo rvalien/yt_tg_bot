@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import psycopg2
 import datetime
+import os
 
 
 def printer(subs, views):
@@ -11,31 +12,42 @@ def printer(subs, views):
     return f'{s1}\n{s2}'
 
 
-def show_day_statistic(database, path='data/stat.png'):
+def _get_db_data(database):
     conn = psycopg2.connect(database)
     df = pd.read_sql('select * from detektivo', conn)
+    return df
+
+
+def _transform_db_data(df):
     df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
     df = df[df['datetime'].dt.date == pd.Timestamp.now().date()].sort_values(by='datetime')
     df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
     df = df.assign(time=df['datetime'].dt.time)
-    df = df.assign(hour=df['datetime'].dt.time)
     df = df.assign(hour=df['datetime'].dt.hour)
     df = df.assign(subs_shifted=df['subscribers'].shift(1), views_shifted=df['views'].shift(1))
-
     df = df.assign(subs_hourly=df['subscribers'] - df['subs_shifted'], views_hourly=df['views'] - df['views_shifted'])
 
     df = df.set_index('hour')
     df.sort_index(inplace=True)
+    return df
+
+
+def show_day_statistic(database, path='./data/stat.png'):
+    df = _get_db_data(database)
+    df = _transform_db_data(df)
+
+    # make text
     max_sub = df.loc[df['subs_hourly'] == df['subs_hourly'].max()][['time', 'subs_hourly']].values[0]
     max_view = df.loc[df['views_hourly'] == df['views_hourly'].max()][['time', 'views_hourly']].values[0]
-
-    # make picture
-    df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
-
     stat_text = f"""
     в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour} подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
     пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
     пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])}) """
+
+    # make picture
+    df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
+    print(os.curdir)
+    print(os.get_exec_path())
     return stat_text
 
 
