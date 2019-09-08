@@ -98,9 +98,8 @@ def main():
 
 
 
-
 if __name__ == '__main__':
     # add_new_to_db('https://www.ikea.com/ru/ru/catalog/products/20370547/')
-    # show_db_items()
-    print(main())
+    show_db_items()
+    # print(main())
     # print(get_info(199, 'https://www.ikea.com/ru/ru/catalog/products/30375139/'))
