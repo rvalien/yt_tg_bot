@@ -11,27 +11,31 @@ def printer(subs, views):
     return f'{s1}\n{s2}'
 
 
-def show_day_statistic(database):
+def show_day_statistic(database, path='data/stat.png'):
     conn = psycopg2.connect(database)
     df = pd.read_sql('select * from detektivo', conn)
     df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
-    today = df[df['datetime'].dt.date == pd.Timestamp.now().date()].sort_values(by='datetime')
-    today = today.assign(datetime=today['datetime'].values.astype('datetime64[s]'))
-    today = today.assign(time=today['datetime'].dt.time)
+    df = df[df['datetime'].dt.date == pd.Timestamp.now().date()].sort_values(by='datetime')
+    df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
+    df = df.assign(time=df['datetime'].dt.time)
+    df = df.assign(hour=df['datetime'].dt.time)
+    df = df.assign(hour=df['datetime'].dt.hour)
+    df = df.assign(subs_shifted=df['subscribers'].shift(1), views_shifted=df['views'].shift(1))
 
-    today = today.assign(subscribers_shifted=today['subscribers'].shift(1),
-                         views_shifted=today['views'].shift(1))
+    df = df.assign(subs_hourly=df['subscribers'] - df['subs_shifted'], views_hourly=df['views'] - df['views_shifted'])
 
-    today = today.assign(subscribers_hourly=today['subscribers'] - today['subscribers_shifted'],
-                         views_hourly=today['views'] - today['views_shifted'])
+    df = df.set_index('hour')
+    df.sort_index(inplace=True)
+    max_sub = df.loc[df['subs_hourly'] == df['subs_hourly'].max()][['time', 'subs_hourly']].values[0]
+    max_view = df.loc[df['views_hourly'] == df['views_hourly'].max()][['time', 'views_hourly']].values[0]
 
-    max_sub = today.loc[today['subscribers_hourly'] == today['subscribers_hourly'].max()]['time'].tolist()[0]
-    max_view = today.loc[today['views_hourly'] == today['views_hourly'].max()]['time'].tolist()[0]
+    # make picture
+    df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
 
     stat_text = f"""
-    Сегодня, в период с {today.iloc[0]['datetime'].hour} по {today.iloc[-1]['datetime'].hour}
-    подписалось *{today.iloc[-1]['subscribers'] - today.iloc[0]['subscribers']}* человек.
-    Больше всего просмотров было в {max_view.hour} часов, а подписок в {max_sub.hour} часов."""
+    в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour} подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
+    пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
+    пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])}) """
     return stat_text
 
 
@@ -59,11 +63,11 @@ def get_weather(weather_token, city_id=550280):  # Khimky
     return res_text
 
 
-def get_gbs_left(login: str, password: str)-> dict:
+def get_gbs_left(login: str, password: str) -> dict:
     url = 'http://ststel.ru/lk/submit.php'
-    header={
+    header = {
         "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0"}
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0"}
     payload = {'phone': str(login), 'pass': str(password)}
     a, b = 0, 0
     i = 0
@@ -75,7 +79,7 @@ def get_gbs_left(login: str, password: str)-> dict:
                 return f'ошибка авторизации {r.status_code}'
             else:
                 foo = r.json()['customers']
-                if len(foo)!= 1:
+                if len(foo) != 1:
                     print('проверь код')
                 else:
                     foo = foo[0]

@@ -34,9 +34,6 @@ night_to = datetime.time(5)
 conn_pos = psycopg2.connect(database)
 cursor_pos = conn_pos.cursor()
 
-# conn = sqlite3.connect(db_name)
-# cursor = conn.cursor()
-
 chat_ids = []
 cursor_pos.execute('select chat_id from chat_ids')
 for item in cursor_pos.fetchall():
@@ -57,28 +54,44 @@ markup.row('/mobile_internet')
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
+    await types.ChatActions.typing(1)
     await message.reply("Привет, я GladOS и я умею:\n /youtube \n /weather", reply_markup=markup)
 
 
 @dp.message_handler(commands=['youtube'])
 async def send_welcome(message):
+    await types.ChatActions.typing(1)
     await message.reply(printer(*get_yt_info(youtube_token)))
-    # await message.reply('возврат оформи на туфли')
 
 
 @dp.message_handler(commands=['weather'])
 async def send_welcome(message):
+    await types.ChatActions.typing(1)
     await message.reply(get_weather(weather_token))
+
+
+# @dp.message_handler(commands=['test'])
+# async def send_welcome(message):
+#     await types.ChatActions.upload_photo()
+#     media = types.MediaGroup()
+#     media.attach_photo(types.InputFile('data/stat.jpeg'), 'статистика за день!')
+#     await message.reply_media_group(media=media)
 
 
 @dp.message_handler(commands=['ikea'])
 async def send_welcome(message):
+    await types.ChatActions.typing(2)
     await message.reply(ikea.main())
 
 
 @dp.message_handler(commands=['statistic'])
 async def send_welcome(message):
-    await message.reply(str(show_day_statistic(database)))
+
+    media = types.MediaGroup()
+    text = show_day_statistic(database)
+    media.attach_photo(types.InputFile('data/stat.png'), text)
+    await types.ChatActions.upload_photo()
+    await message.reply_media_group(media=media)
 
 
 @dp.message_handler(commands=['mobile_internet'])
@@ -87,6 +100,7 @@ async def send_welcome(message):
     cursor = conn.cursor()
     cursor.execute(f"select phone, password from ststel where chat_id = {message['from']['id']}")
     res = cursor.fetchone()
+    await types.ChatActions.typing(1)
     await message.reply(str(print_gb_info(get_gbs_left(*res))))
 
 
@@ -111,6 +125,7 @@ async def auto_yt_check():
         else:
             print('отправка')
             for chat_id in chat_ids:
+                await types.ChatActions.typing(1)
                 await bot.send_message(chat_id, printer(current_subs, current_view))
 
 
