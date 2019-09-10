@@ -6,6 +6,7 @@ import datetime
 
 from aiogram import Bot, types
 from aiogram.utils import executor
+from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
 from utils import get_yt_info, printer, get_weather, show_day_statistic, get_gbs_left, print_gb_info
 import ikea
@@ -44,12 +45,15 @@ subscribers = cursor_pos.fetchall()
 subscribers = subscribers[0][0]
 conn_pos.close()
 
+youtube = KeyboardButton('youtube 🎬')
+statistic = KeyboardButton('statistic 📈')
+
+
 markup = types.ReplyKeyboardMarkup()
-markup.row('/youtube')
-markup.row('/statistic')
-markup.row('/weather')
-markup.row('/ikea')
-markup.row('/mobile_internet')
+markup.row(youtube, statistic)
+markup.row('🌤 weather 🌧')
+markup.row('ikea 🇸🇪')
+markup.row('📱 internet 🌐')
 
 
 @dp.message_handler(commands=['start', 'help'])
@@ -58,33 +62,29 @@ async def send_welcome(message: types.Message):
     await message.reply("Привет, я GladOS и я умею:\n /youtube \n /weather", reply_markup=markup)
 
 
-@dp.message_handler(commands=['youtube'])
+@dp.message_handler(regexp='youtube..')
 async def send_welcome(message):
     await types.ChatActions.typing(1)
     await message.reply(printer(*get_yt_info(youtube_token)))
+    conn_pos = psycopg2.connect(database)
+    cursor_pos = conn_pos.cursor()
+    cursor_pos.execute(f"insert into yt_query_log(chat_id, datetime) values('{message['from']['id']}', now())")
+    conn_pos.commit()
 
 
-@dp.message_handler(commands=['weather'])
+@dp.message_handler(regexp='..weather..')
 async def send_welcome(message):
     await types.ChatActions.typing(1)
     await message.reply(get_weather(weather_token))
 
 
-# @dp.message_handler(commands=['test'])
-# async def send_welcome(message):
-#     await types.ChatActions.upload_photo()
-#     media = types.MediaGroup()
-#     media.attach_photo(types.InputFile('data/stat.jpeg'), 'статистика за день!')
-#     await message.reply_media_group(media=media)
-
-
-@dp.message_handler(commands=['ikea'])
+@dp.message_handler(regexp='ikea*')
 async def send_welcome(message):
     await types.ChatActions.typing(2)
     await message.reply(ikea.main())
 
 
-@dp.message_handler(commands=['statistic'])
+@dp.message_handler(regexp='statistic..')
 async def send_welcome(message):
 
     media = types.MediaGroup()
@@ -95,7 +95,7 @@ async def send_welcome(message):
     await message.reply_media_group(media=media)
 
 
-@dp.message_handler(commands=['mobile_internet'])
+@dp.message_handler(regexp='..internet..')
 async def send_welcome(message):
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
