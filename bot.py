@@ -9,16 +9,14 @@ from aiogram.utils import executor
 from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
 from utils import get_yt_info, printer, get_weather, show_day_statistic, get_gbs_left, print_gb_info
-import ikea
 
 
-db_name = 'bot.db'
 delay = 3600
 
 if sys.platform == 'win32':
     from config import *
     print('локальненько в тестовом режимчике')
-    delay = 3600
+    delay = 180
 
 telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
@@ -45,14 +43,10 @@ subscribers = cursor_pos.fetchall()
 subscribers = subscribers[0][0]
 conn_pos.close()
 
-youtube = KeyboardButton('youtube 🎬')
-statistic = KeyboardButton('statistic 📈')
-
 
 markup = types.ReplyKeyboardMarkup()
-markup.row(youtube, statistic)
+markup.row(KeyboardButton('youtube 🎬'), KeyboardButton('statistic 📈'))
 markup.row('🌤 weather 🌧')
-markup.row('ikea 🇸🇪')
 markup.row('📱 internet 🌐')
 
 
@@ -76,12 +70,6 @@ async def send_welcome(message):
 async def send_welcome(message):
     await types.ChatActions.typing(1)
     await message.reply(get_weather(weather_token))
-
-
-@dp.message_handler(regexp='ikea*')
-async def send_welcome(message):
-    await types.ChatActions.typing(2)
-    await message.reply(ikea.main())
 
 
 @dp.message_handler(regexp='statistic..')
@@ -128,16 +116,6 @@ async def auto_yt_check():
             for chat_id in chat_ids:
                 await types.ChatActions.typing(1)
                 await bot.send_message(chat_id, printer(current_subs, current_view))
-
-
-async def auto_ikea_check():
-    now = datetime.datetime.now().time()
-    if night_to < now < night_from:
-        if ikea.main() == 'ничего нового':
-            pass
-        else:
-            for chat_id in chat_ids:
-                await bot.send_message(chat_id, ikea.main())
 
 
 def repeat(coro, loop):
