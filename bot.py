@@ -11,7 +11,7 @@ from aiogram.dispatcher import Dispatcher
 from utils import get_yt_info, printer, get_weather, show_day_statistic, get_gbs_left, print_gb_info
 
 
-delay = 3600
+delay = 300
 
 if sys.platform == 'win32':
     from config import *
@@ -76,9 +76,10 @@ async def send_welcome(message):
 async def send_welcome(message):
 
     media = types.MediaGroup()
-    file ='stat.png'
-    text = show_day_statistic(database, path=file)
-    media.attach_photo(types.InputFile(file), text)
+    # file ='stat.png'
+    text = show_day_statistic(database)
+    media.attach_photo(types.InputFile('subs.png'), text)
+    media.attach_photo(types.InputFile('views.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
 
@@ -93,7 +94,7 @@ async def send_welcome(message):
     await message.reply(str(print_gb_info(get_gbs_left(*res))))
 
 
-async def auto_yt_check():
+async def auto_yt_check(send=False):
     now = datetime.datetime.now().time()
     current_subs, current_view = get_yt_info(youtube_token)
     conn = psycopg2.connect(database)
@@ -104,18 +105,18 @@ async def auto_yt_check():
                         values('{current_subs}', '{current_view}', now())''')
     conn.commit()
     conn.close()
-
-    if night_to < now < night_from:
-        if len(db_subs) != 0 and db_subs[0][0] == current_subs:
-            db_subs = db_subs[0][0]
-            print(current_subs, db_subs)
-            print('не делаем ничего')
-            pass
-        else:
-            print('отправка')
-            for chat_id in chat_ids:
-                await types.ChatActions.typing(1)
-                await bot.send_message(chat_id, printer(current_subs, current_view))
+    if send:
+        if night_to < now < night_from:
+            if len(db_subs) != 0 and db_subs[0][0] == current_subs:
+                db_subs = db_subs[0][0]
+                print(current_subs, db_subs)
+                print('не делаем ничего')
+                pass
+            else:
+                print('отправка')
+                for chat_id in chat_ids:
+                    await types.ChatActions.typing(1)
+                    await bot.send_message(chat_id, printer(current_subs, current_view))
 
 
 def repeat(coro, loop):

@@ -32,22 +32,65 @@ def _transform_db_data(df):
     return df
 
 
-def show_day_statistic(database, path='./data/stat.png'):
-    df = _get_db_data(database)
-    df = _transform_db_data(df)
+# def show_day_statistic(database, path='./data/stat.png'):
+#     df = _get_db_data(database)
+#     df = _transform_db_data(df)
+#
+#     # make text
+#     max_sub = df.loc[df['subs_hourly'] == df['subs_hourly'].max()][['time', 'subs_hourly']].values[0]
+#     max_view = df.loc[df['views_hourly'] == df['views_hourly'].max()][['time', 'views_hourly']].values[0]
+#     stat_text = f"""
+#     в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour} подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
+#     пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
+#     пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])}) """
+#
+#     # make picture
+#     df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
+#     return stat_text
 
-    # make text
-    max_sub = df.loc[df['subs_hourly'] == df['subs_hourly'].max()][['time', 'subs_hourly']].values[0]
-    max_view = df.loc[df['views_hourly'] == df['views_hourly'].max()][['time', 'views_hourly']].values[0]
+
+def show_day_statistic(database):
+    conn = psycopg2.connect(database)
+    df = pd.read_sql("select * from detektivo where datetime >= current_date - INTERVAL '2 DAY'", conn)
+    df = df.dropna()
+    df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
+
+    df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
+    df = df.assign(date=df['datetime'].dt.date)
+    df = df.assign(time=df['datetime'].dt.time)
+    df = df.assign(hour=df['datetime'].dt.hour)
+    df = df.sort_values(by='datetime')
+    df = df.assign(subs_shifted=df['subscribers'].shift(1), views_shifted=df['views'].shift(1))
+    df = df.assign(subs_hourly=df['subscribers'] - df['subs_shifted'], views_hourly=df['views'] - df['views_shifted'])
+    df = df.drop(columns=['subs_shifted', 'views_shifted', 'datetime'])
+    past = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('2 days')].set_index('hour').sort_index()
+    yest = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('1 days')].set_index('hour').sort_index()
+    tod = df[df['date'] == pd.Timestamp.now().date()].set_index('hour').sort_index()
+    past = past.add_suffix('_past')
+    yest = yest.add_suffix('_yest')
+    tod = tod.add_suffix('_tod')
+    res = pd.concat([yest, tod, past], 1)
+
+    max_sub = tod.loc[tod['subs_hourly_tod'] == tod['subs_hourly_tod'].max()][['time_tod', 'subs_hourly_tod']].values[0]
+    max_view = \
+    tod.loc[tod['views_hourly_tod'] == tod['views_hourly_tod'].max()][['time_tod', 'views_hourly_tod']].values[0]
+
+    #     # make picture
+    res[['subs_hourly_tod',
+         'subs_hourly_yest',
+         'subs_hourly_past']].fillna(method='pad').plot(figsize=(10, 5), xticks=res.index,
+                                                        title='подписки').get_figure().savefig('subs.png')
+
+    res[['views_hourly_tod',
+         'views_hourly_yest',
+         'views_hourly_past']].fillna(method='pad').plot(figsize=(10, 5), xticks=res.index,
+                                                         title='просмотры').get_figure().savefig('views.png')
+
+    #     time_text = (df.iloc[0]['time_tod'].hour, df.iloc[-1]['time_tod'].hour)
+    #     subs_text = df.iloc[-1]['subscribers_tod'] - df.iloc[0]['subscribers_tod']
     stat_text = f"""
-    в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour} подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
-    пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
-    пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])}) """
-
-    # make picture
-    df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
-    print(os.curdir)
-    print(os.get_exec_path())
+    в период с  по  подписалось
+    """
     return stat_text
 
 
