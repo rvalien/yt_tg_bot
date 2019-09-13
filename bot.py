@@ -78,7 +78,7 @@ async def send_welcome(message):
     media = types.MediaGroup()
     text = show_day_statistic(database)
     # TODO убрать хардкод названий файлов
-    media.attach_photo(types.InputFile('subs_.png'), text)
+    media.attach_photo(types.InputFile('subs_hourly.png'), text)
     # media.attach_photo(types.InputFile('views_.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)

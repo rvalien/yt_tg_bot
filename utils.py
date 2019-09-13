@@ -87,11 +87,11 @@ def show_day_statistic(database: str, path: str = 'subs_.png') -> str:
     """
     df = _get_db_data(database)
     df = _transform_db_data(df)
-    text = _statistic_text(df)
     # make picture
-    df = df.set_index('hour').sort_index()
-    df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
-    return text
+    df = df[df['date'] == pd.Timestamp.now().date()].set_index('hour').sort_index()
+    _make_picture(df, column='subs_hourly')
+    # df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
+    return _statistic_text(df)
 
 
 # def show_day_statistic(database: str) -> str:
@@ -102,7 +102,7 @@ def show_day_statistic(database: str, path: str = 'subs_.png') -> str:
 #     """
 #     df = _get_db_data(database)
 #     df = _transform_db_data(df)
-#
+#     prepare df to make a plot
 #     past = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('2 days')].set_index('hour').sort_index()
 #     yesterday = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('1 days')].set_index('hour').sort_index()
 #     today = df[df['date'] == pd.Timestamp.now().date()].set_index('hour').sort_index()
