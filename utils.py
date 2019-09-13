@@ -38,7 +38,7 @@ def _make_picture(df: pd.DataFrame, column: str = 'views'):
     """
     df.filter(regex=column).fillna(method='pad').plot(figsize=(10, 5),
                                                       xticks=list(range(0, 25)),
-                                                      title='подписки').get_figure().savefig(d=f'{column}.png')
+                                                      title='подписки').get_figure().savefig(f'{column}.png')
 
 
 def _statistic_text(df: str) -> str:
