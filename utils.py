@@ -42,21 +42,21 @@ def _make_picture(df: pd.DataFrame, column: str = 'views'):
                                                       title='подписки').get_figure().savefig(d=f'{column}.png')
 
 
-# def show_day_statistic(database, path='./data/stat.png'):
-#     df = _get_db_data(database)
-#     df = _transform_db_data(df)
-#
-#     # make text
-#     max_sub = df.loc[df['subs_hourly'] == df['subs_hourly'].max()][['time', 'subs_hourly']].values[0]
-#     max_view = df.loc[df['views_hourly'] == df['views_hourly'].max()][['time', 'views_hourly']].values[0]
-#     stat_text = f"""
-#     в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour} подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
-#     пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
-#     пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])}) """
-#
-#     # make picture
-#     df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
-#     return stat_text
+def show_day_statistic(database, path='./data/stat.png'):
+    df = _get_db_data(database)
+    df = _transform_db_data(df)
+
+    # make text
+    max_sub = df.loc[df['subs_hourly'] == df['subs_hourly'].max()][['time', 'subs_hourly']].values[0]
+    max_view = df.loc[df['views_hourly'] == df['views_hourly'].max()][['time', 'views_hourly']].values[0]
+    stat_text = f"""
+    в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour} подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
+    пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
+    пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])}) """
+
+    # make picture
+    df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
+    return stat_text
 
 
 def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -78,37 +78,37 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def show_day_statistic(database: str) -> str:
-    """
-
-    :param database: database url
-    :return:
-    """
-    df = _get_db_data(database)
-    df = _transform_db_data(df)
-
-    past = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('2 days')].set_index('hour').sort_index()
-    yesterday = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('1 days')].set_index('hour').sort_index()
-    today = df[df['date'] == pd.Timestamp.now().date()].set_index('hour').sort_index()
-    past = past.add_suffix('_past')
-    yesterday = yesterday.add_suffix('_yesterday')
-    today = today.add_suffix('_today')
-    res = pd.concat([yesterday, today, past], 1)
-
-    #     # make picture
-    _make_picture(res, column='views_')
-    _make_picture(res, column='subs_')
-
-    # make text
-    # TODO переработать
-    max_sub = today.loc[
-        today['subs_hourly_today'] == today['subs_hourly_today'].max()][['subs_hourly_today']].values[0]
-    max_view = today.loc[
-        today['views_hourly_today'] == today['views_hourly_today'].max()][['views_hourly_today']].values[0]
-
-    return f" в период с {today['time_today'].min()} по {today['time_today'].max()}:" \
-           f"подписок: {max_sub[0]}" \
-           f"просмотров: {max_view[0]}"
+# def show_day_statistic(database: str) -> str:
+#     """
+#
+#     :param database: database url
+#     :return:
+#     """
+#     df = _get_db_data(database)
+#     df = _transform_db_data(df)
+#
+#     past = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('2 days')].set_index('hour').sort_index()
+#     yesterday = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('1 days')].set_index('hour').sort_index()
+#     today = df[df['date'] == pd.Timestamp.now().date()].set_index('hour').sort_index()
+#     past = past.add_suffix('_past')
+#     yesterday = yesterday.add_suffix('_yesterday')
+#     today = today.add_suffix('_today')
+#     res = pd.concat([yesterday, today, past], 1)
+#
+#     #     # make picture
+#     _make_picture(res, column='views_')
+#     _make_picture(res, column='subs_')
+#
+#     # make text
+#     # TODO переработать
+#     max_sub = today.loc[
+#         today['subs_hourly_today'] == today['subs_hourly_today'].max()][['subs_hourly_today']].values[0]
+#     max_view = today.loc[
+#         today['views_hourly_today'] == today['views_hourly_today'].max()][['views_hourly_today']].values[0]
+#
+#     return f" в период с {today['time_today'].min()} по {today['time_today'].max()}:" \
+#            f"подписок: {max_sub[0]}" \
+#            f"просмотров: {max_view[0]}"
 
 
 def get_yt_info(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (int, int):
