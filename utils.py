@@ -6,30 +6,40 @@ import datetime
 import os
 
 
-def printer(subs, views):
+def printer(subs: int, views: int) -> str:
+    """
+
+    :param subs:
+    :param views:
+    :return:
+    """
+
     s1 = "{:,d}".format(subs) + " подписчиков! 🍾🎉🍾"
     s2 = "{:,d}".format(views) + " просмотов! 🎈🎈🎈"
     return f'{s1}\n{s2}'
 
 
-def _get_db_data(database):
+def _get_db_data(database: str, depth_days: int = 2) -> pd.DataFrame:
+    """
+
+    :param database: database url
+    :return:
+    """
     conn = psycopg2.connect(database)
-    df = pd.read_sql('select * from detektivo', conn)
+    df = pd.read_sql(f"select * from detektivo where datetime >= current_date - INTERVAL '{depth_days} DAY'", conn)
     return df
 
 
-def _transform_db_data(df):
-    df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
-    df = df[df['datetime'].dt.date == pd.Timestamp.now().date()].sort_values(by='datetime')
-    df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
-    df = df.assign(time=df['datetime'].dt.time)
-    df = df.assign(hour=df['datetime'].dt.hour)
-    df = df.assign(subs_shifted=df['subscribers'].shift(1), views_shifted=df['views'].shift(1))
-    df = df.assign(subs_hourly=df['subscribers'] - df['subs_shifted'], views_hourly=df['views'] - df['views_shifted'])
-
-    df = df.set_index('hour')
-    df.sort_index(inplace=True)
-    return df
+def _make_picture(df: pd.DataFrame, column: str = 'views'):
+    """
+    method prepare and save 2 pictures based on dataframe
+    :param df: dataframe with a few days statistic
+    :param column: part of columns name, that we need to make a plot
+    :return:
+    """
+    df.filter(regex=column).fillna(method='pad').plot(figsize=(10, 5),
+                                                      xticks=list(range(0, 25)),
+                                                      title='подписки').get_figure().savefig(d=f'{column}.png')
 
 
 # def show_day_statistic(database, path='./data/stat.png'):
@@ -49,12 +59,13 @@ def _transform_db_data(df):
 #     return stat_text
 
 
-def show_day_statistic(database):
-    conn = psycopg2.connect(database)
-    df = pd.read_sql("select * from detektivo where datetime >= current_date - INTERVAL '2 DAY'", conn)
-    df = df.dropna()
-    df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
+def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
 
+    :param df: raw dataframe from database
+    :return:
+    """
+    df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
     df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
     df = df.assign(date=df['datetime'].dt.date)
     df = df.assign(time=df['datetime'].dt.time)
@@ -63,42 +74,52 @@ def show_day_statistic(database):
     df = df.assign(subs_shifted=df['subscribers'].shift(1), views_shifted=df['views'].shift(1))
     df = df.assign(subs_hourly=df['subscribers'] - df['subs_shifted'], views_hourly=df['views'] - df['views_shifted'])
     df = df.drop(columns=['subs_shifted', 'views_shifted', 'datetime'])
-    past = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('2 days')].set_index('hour').sort_index()
-    yest = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('1 days')].set_index('hour').sort_index()
-    tod = df[df['date'] == pd.Timestamp.now().date()].set_index('hour').sort_index()
-    past = past.add_suffix('_past')
-    yest = yest.add_suffix('_yest')
-    tod = tod.add_suffix('_tod')
-    res = pd.concat([yest, tod, past], 1)
 
-    max_sub = tod.loc[tod['subs_hourly_tod'] == tod['subs_hourly_tod'].max()][['time_tod', 'subs_hourly_tod']].values[0]
-    max_view = \
-    tod.loc[tod['views_hourly_tod'] == tod['views_hourly_tod'].max()][['time_tod', 'views_hourly_tod']].values[0]
+    return df
+
+
+def show_day_statistic(database: str) -> str:
+    """
+
+    :param database: database url
+    :return:
+    """
+    df = _get_db_data(database)
+    df = _transform_db_data(df)
+
+    past = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('2 days')].set_index('hour').sort_index()
+    yesterday = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('1 days')].set_index('hour').sort_index()
+    today = df[df['date'] == pd.Timestamp.now().date()].set_index('hour').sort_index()
+    past = past.add_suffix('_past')
+    yesterday = yesterday.add_suffix('_yesterday')
+    today = today.add_suffix('_today')
+    res = pd.concat([yesterday, today, past], 1)
 
     #     # make picture
-    res[['subs_hourly_tod',
-         'subs_hourly_yest',
-         'subs_hourly_past']].fillna(method='pad').plot(figsize=(10, 5), xticks=res.index,
-                                                        title='подписки').get_figure().savefig('subs.png')
+    _make_picture(res, column='views_')
+    _make_picture(res, column='subs_')
 
-    res[['views_hourly_tod',
-         'views_hourly_yest',
-         'views_hourly_past']].fillna(method='pad').plot(figsize=(10, 5), xticks=res.index,
-                                                         title='просмотры').get_figure().savefig('views.png')
+    # make text
+    # TODO переработать
+    max_sub = today.loc[
+        today['subs_hourly_today'] == today['subs_hourly_today'].max()][['time_today', 'subs_hourly_today']].values[0]
+    max_view = today.loc[
+        today['views_hourly_today'] == today['views_hourly_today'].max()][['time_today', 'views_hourly_today']].values[0]
 
     #     time_text = (df.iloc[0]['time_tod'].hour, df.iloc[-1]['time_tod'].hour)
     #     subs_text = df.iloc[-1]['subscribers_tod'] - df.iloc[0]['subscribers_tod']
     stat_text = f"""
-    в период с  по  подписалось
+    в период с {} по {} подписалось {}. За сегодня просмотров {}
     """
     return stat_text
 
 
-def get_yt_info(youtube_token, c_id='UCawxRTnNrCPlXHJRttupImA'):
+def get_yt_info(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (int, int):
     """
 
+    :param youtube_token: youtube api token
     :param c_id: youtube channel id
-    :return: youtube channel subscribers and sum(views)
+    :return: youtube channel subscribers and sum(all videos views)
     """
     url = f"https://www.googleapis.com/youtube/v3/channels?part=statistics&id={c_id}&key={youtube_token}"
     data = requests.get(url)
@@ -110,7 +131,7 @@ def get_yt_info(youtube_token, c_id='UCawxRTnNrCPlXHJRttupImA'):
         print(data.status_code)
 
 
-def get_weather(weather_token, city_id=550280):  # Khimky
+def get_weather(weather_token, city_id: int = 550280):  # Khimky
     res = requests.get("http://api.openweathermap.org/data/2.5/weather",
                        params={'id': city_id, 'units': 'metric', 'lang': 'ru', 'APPID': weather_token})
     data = res.json()
