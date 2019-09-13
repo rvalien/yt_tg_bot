@@ -102,16 +102,13 @@ def show_day_statistic(database: str) -> str:
     # make text
     # TODO переработать
     max_sub = today.loc[
-        today['subs_hourly_today'] == today['subs_hourly_today'].max()][['time_today', 'subs_hourly_today']].values[0]
+        today['subs_hourly_today'] == today['subs_hourly_today'].max()][['subs_hourly_today']].values[0]
     max_view = today.loc[
-        today['views_hourly_today'] == today['views_hourly_today'].max()][['time_today', 'views_hourly_today']].values[0]
+        today['views_hourly_today'] == today['views_hourly_today'].max()][['views_hourly_today']].values[0]
 
-    #     time_text = (df.iloc[0]['time_tod'].hour, df.iloc[-1]['time_tod'].hour)
-    #     subs_text = df.iloc[-1]['subscribers_tod'] - df.iloc[0]['subscribers_tod']
-    stat_text = f"""
-    в период с {} по {} подписалось {}. За сегодня просмотров {}
-    """
-    return stat_text
+    return f" в период с {today['time_today'].min()} по {today['time_today'].max()}:" \
+           f"подписок: {max_sub[0]}" \
+           f"просмотров: {max_view[0]}"
 
 
 def get_yt_info(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (int, int):
