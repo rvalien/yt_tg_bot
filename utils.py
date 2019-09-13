@@ -42,7 +42,7 @@ def _make_picture(df: pd.DataFrame, column: str = 'views'):
                                                       title='подписки').get_figure().savefig(d=f'{column}.png')
 
 
-def show_day_statistic(database, path='stat.png'):
+def show_day_statistic(database, path='subs_.png'):
     df = _get_db_data(database)
     df = _transform_db_data(df)
 
