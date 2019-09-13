@@ -3,7 +3,6 @@ import pandas as pd
 import requests
 import psycopg2
 import datetime
-import os
 
 
 def printer(subs: int, views: int) -> str:
@@ -42,7 +41,12 @@ def _make_picture(df: pd.DataFrame, column: str = 'views'):
                                                       title='подписки').get_figure().savefig(d=f'{column}.png')
 
 
-def _statistic_text(df):
+def _statistic_text(df: str) -> str:
+    """
+
+    :param df:
+    :return: text to send with images
+    """
     df = df[df['date'] == pd.Timestamp.now().date()]
 
     max_sub = df.loc[df['subs_hourly'] == df['subs_hourly'].max()][['time', 'subs_hourly']].values[0]
@@ -55,20 +59,11 @@ def _statistic_text(df):
     return stat_text
 
 
-def show_day_statistic(database, path='subs_.png'):
-    df = _get_db_data(database)
-    df = _transform_db_data(df)
-    text = _statistic_text(df)
-    # make picture
-    df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
-    return text
-
-
 def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     """
 
     :param df: raw dataframe from database
-    :return:
+    :return: transformed dataframe
     """
     df = df.assign(datetime=df['datetime'].dt.tz_localize('UTC').dt.tz_convert('Europe/Moscow'))
     df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
@@ -81,6 +76,22 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop(columns=['subs_shifted', 'views_shifted'])
 
     return df
+
+
+def show_day_statistic(database: str, path: str = 'subs_.png') -> str:
+    """
+
+    :param database: connection string of database
+    :param path: image name to save
+    :return: text to send
+    """
+    df = _get_db_data(database)
+    df = _transform_db_data(df)
+    text = _statistic_text(df)
+    # make picture
+    df = df.set_index('hour').sort_index()
+    df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
+    return text
 
 
 # def show_day_statistic(database: str) -> str:
