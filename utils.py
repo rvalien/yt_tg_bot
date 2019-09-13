@@ -42,21 +42,26 @@ def _make_picture(df: pd.DataFrame, column: str = 'views'):
                                                       title='подписки').get_figure().savefig(d=f'{column}.png')
 
 
-def show_day_statistic(database, path='subs_.png'):
-    df = _get_db_data(database)
-    df = _transform_db_data(df)
+def _statistic_text(df):
+    df = df[df['date'] == pd.Timestamp.now().date()]
 
-    # make text
     max_sub = df.loc[df['subs_hourly'] == df['subs_hourly'].max()][['time', 'subs_hourly']].values[0]
     max_view = df.loc[df['views_hourly'] == df['views_hourly'].max()][['time', 'views_hourly']].values[0]
     stat_text = f"""
-    в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour} подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
+    в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour}
+    подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
     пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
     пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])}) """
+    return stat_text
 
+
+def show_day_statistic(database, path='subs_.png'):
+    df = _get_db_data(database)
+    df = _transform_db_data(df)
+    text = _statistic_text(df)
     # make picture
     df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
-    return stat_text
+    return text
 
 
 def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -65,8 +70,7 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     :param df: raw dataframe from database
     :return:
     """
-    # TODO utc to local переделать
-    df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
+    df = df.assign(datetime=df['datetime'].dt.tz_localize('UTC').dt.tz_convert('Europe/Moscow'))
     df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
     df = df.assign(date=df['datetime'].dt.date)
     df = df.assign(time=df['datetime'].dt.time)
@@ -96,20 +100,12 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
 #     today = today.add_suffix('_today')
 #     res = pd.concat([yesterday, today, past], 1)
 #
-#     #     # make picture
+#     # make picture
 #     _make_picture(res, column='views_')
 #     _make_picture(res, column='subs_')
-#
 #     # make text
-#     # TODO переработать
-#     max_sub = today.loc[
-#         today['subs_hourly_today'] == today['subs_hourly_today'].max()][['subs_hourly_today']].values[0]
-#     max_view = today.loc[
-#         today['views_hourly_today'] == today['views_hourly_today'].max()][['views_hourly_today']].values[0]
-#
-#     return f" в период с {today['time_today'].min()} по {today['time_today'].max()}:" \
-#            f"подписок: {max_sub[0]}" \
-#            f"просмотров: {max_view[0]}"
+#     text = _statistic_text(df)
+#     return text
 
 
 def get_yt_info(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (int, int):
