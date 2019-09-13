@@ -42,7 +42,7 @@ def _make_picture(df: pd.DataFrame, column: str = 'views'):
                                                       title='подписки').get_figure().savefig(d=f'{column}.png')
 
 
-def show_day_statistic(database, path='./data/stat.png'):
+def show_day_statistic(database, path='stat.png'):
     df = _get_db_data(database)
     df = _transform_db_data(df)
 
@@ -65,7 +65,7 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     :param df: raw dataframe from database
     :return:
     """
-    # TODO
+    # TODO utc to local переделать
     df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
     df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
     df = df.assign(date=df['datetime'].dt.date)
