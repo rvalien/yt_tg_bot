@@ -65,6 +65,7 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     :param df: raw dataframe from database
     :return:
     """
+    # TODO
     df = df.assign(datetime=df['datetime'] + datetime.timedelta(minutes=180))  # так мы хитро получаем московское время.
     df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
     df = df.assign(date=df['datetime'].dt.date)
@@ -73,7 +74,7 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df.sort_values(by='datetime')
     df = df.assign(subs_shifted=df['subscribers'].shift(1), views_shifted=df['views'].shift(1))
     df = df.assign(subs_hourly=df['subscribers'] - df['subs_shifted'], views_hourly=df['views'] - df['views_shifted'])
-    df = df.drop(columns=['subs_shifted', 'views_shifted', 'datetime'])
+    df = df.drop(columns=['subs_shifted', 'views_shifted'])
 
     return df
 
