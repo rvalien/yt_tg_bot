@@ -11,7 +11,7 @@ from aiogram.dispatcher import Dispatcher
 from utils import get_yt_info, printer, get_weather, show_day_statistic, get_gbs_left, print_gb_info
 
 
-delay = 300
+delay = 900
 
 if sys.platform == 'win32':
     from config import *
