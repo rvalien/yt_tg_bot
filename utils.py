@@ -18,14 +18,26 @@ def printer(subs: int, views: int) -> str:
     return f'{s1}\n{s2}'
 
 
-def _get_db_data(database: str, depth_days: int = 2) -> pd.DataFrame:
+def _get_db_data(database: str, depth_days: int = 2, tz: int = 3) -> pd.DataFrame:
     """
 
-    :param database: database url
-    :return:
+    :param database: database connection string
+    :param depth_days: how many days ago you need to get from DB
+    :param tz: correct timezone from UTC to GMT +3 (Russia/Moscow)
+    :return: result dataframe
     """
     conn = psycopg2.connect(database)
-    df = pd.read_sql(f"select * from detektivo where datetime >= current_date - INTERVAL '{depth_days} DAY'", conn)
+    query = f"""select
+                    min(subscribers) as subscribers,
+                    min(views) as views, 
+                    date_part('day', datetime  + interval '{tz} hours') as cur_date_gmt,
+                    date_part('hour', datetime  + interval '{tz} hours') as cur_hour_gmt
+                from
+                    detektivo where datetime  + interval '{tz} hours' >= current_date - INTERVAL '{depth_days} DAY'
+                group by cur_date_gmt, cur_hour_gmt
+                order by cur_date_gmt, cur_hour_gmt"""
+
+    df = pd.read_sql(query, conn)
     return df
 
 
@@ -47,15 +59,15 @@ def _statistic_text(df: str) -> str:
     :param df:
     :return: text to send with images
     """
-    df = df[df['date'] == pd.Timestamp.now().date()]
+    stat_text = 'заглушка'
+    # max_sub = df.loc[df['subscribers_today'] == df['subscribers_today'].max()][['time', 'subs_hourly']].values[0]
+    # max_view = df.loc[df['views_hourly_today'] == df['views_hourly_today'].max()][['time', 'views_hourly']].values[0]
+    # stat_text = f"""
+    # в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour}
+    # подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
+    # пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
+    # пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])})
 
-    max_sub = df.loc[df['subs_hourly'] == df['subs_hourly'].max()][['time', 'subs_hourly']].values[0]
-    max_view = df.loc[df['views_hourly'] == df['views_hourly'].max()][['time', 'views_hourly']].values[0]
-    stat_text = f"""
-    в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour}
-    подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
-    пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
-    пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])}) """
     return stat_text
 
 
@@ -65,17 +77,19 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     :param df: raw dataframe from database
     :return: transformed dataframe
     """
-    df = df.assign(datetime=df['datetime'].dt.tz_localize('UTC').dt.tz_convert('Europe/Moscow'))
-    df = df.assign(datetime=df['datetime'].values.astype('datetime64[s]'))
-    df = df.assign(date=df['datetime'].dt.date)
-    df = df.assign(time=df['datetime'].dt.time)
-    df = df.assign(hour=df['datetime'].dt.hour)
-    df = df.sort_values(by='datetime')
     df = df.assign(subs_shifted=df['subscribers'].shift(1), views_shifted=df['views'].shift(1))
     df = df.assign(subs_hourly=df['subscribers'] - df['subs_shifted'], views_hourly=df['views'] - df['views_shifted'])
     df = df.drop(columns=['subs_shifted', 'views_shifted'])
 
-    return df
+    today = df[df['cur_date_gmt'] == max(list(df['cur_date_gmt']))].set_index('cur_hour_gmt').sort_index()
+    yesterday = df[df['cur_date_gmt'] == (1 + min(list(df['cur_date_gmt'])))].set_index('cur_hour_gmt').sort_index()
+    past = df[df['cur_date_gmt'] == min(list(df['cur_date_gmt']))].set_index('cur_hour_gmt').sort_index()
+    past = past.add_suffix('_past')
+    yesterday = yesterday.add_suffix('_yesterday')
+    today = today.add_suffix('_today')
+    res = pd.concat([yesterday, today, past], 1)
+    # res = res.drop(columns=res.filter(regex='cur_date_gmt_').columns)
+    return res
 
 
 def show_day_statistic(database: str, path: str = 'subs_.png') -> str:
@@ -87,10 +101,10 @@ def show_day_statistic(database: str, path: str = 'subs_.png') -> str:
     """
     df = _get_db_data(database)
     df = _transform_db_data(df)
+
     # make picture
-    df = df[df['date'] == pd.Timestamp.now().date()].set_index('hour').sort_index()
     _make_picture(df, column='subs_hourly')
-    # df[['subs_hourly']].plot(figsize=(10, 5), xticks=df.index, title='статуся').get_figure().savefig(path)
+    _make_picture(df, column='views_hourly')
     return _statistic_text(df)
 
 
