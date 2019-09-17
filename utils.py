@@ -48,25 +48,26 @@ def _make_picture(df: pd.DataFrame, column: str = 'views'):
     :param column: part of columns name, that we need to make a plot
     :return:
     """
-    df.filter(regex=column).fillna(method='pad').plot(figsize=(10, 5),
-                                                      xticks=list(range(0, 25)),
-                                                      title='подписки').get_figure().savefig(f'{column}.png')
+    df.filter(regex=column) .plot(figsize=(10, 5), xticks=list(range(0, 25)),
+                                  title=column).get_figure().savefig(f'{column}.png')
 
 
-def _statistic_text(df: str) -> str:
+def _statistic_text(df: pd.DataFrame) -> str:
     """
 
     :param df:
     :return: text to send with images
     """
-    stat_text = 'заглушка'
-    # max_sub = df.loc[df['subscribers_today'] == df['subscribers_today'].max()][['time', 'subs_hourly']].values[0]
-    # max_view = df.loc[df['views_hourly_today'] == df['views_hourly_today'].max()][['time', 'views_hourly']].values[0]
-    # stat_text = f"""
+    max_sub = df.loc[df['subs_hourly_today'] == df['subs_hourly_today'].max()][['subs_hourly_today']]
+    max_view = df.loc[df['views_hourly_today'] == df['views_hourly_today'].max()][['views_hourly_today']]
+
+
     # в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour}
-    # подписалось {df.iloc[-1]['subscribers'] - df.iloc[0]['subscribers']}.
-    # пик просмотров в {max_view[0].hour} ч. ({int(max_view[1])})
-    # пик подписок в {max_sub[0].hour} ч. ({int(max_sub[1])})
+
+    # подписалось {max_sub - df.iloc[0]['subscribers']}.
+    stat_text = f"""
+    пик просмотров в {max_view.index[0]} ч. ({int(max_view.values[0][0])})
+    пик подписок в {max_sub.index[0]} ч. ({int(max_sub.values[0][0])})"""
 
     return stat_text
 
@@ -106,31 +107,6 @@ def show_day_statistic(database: str, path: str = 'subs_.png') -> str:
     _make_picture(df, column='subs_hourly')
     _make_picture(df, column='views_hourly')
     return _statistic_text(df)
-
-
-# def show_day_statistic(database: str) -> str:
-#     """
-#
-#     :param database: database url
-#     :return:
-#     """
-#     df = _get_db_data(database)
-#     df = _transform_db_data(df)
-#     prepare df to make a plot
-#     past = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('2 days')].set_index('hour').sort_index()
-#     yesterday = df[df['date'] == pd.Timestamp.now().date() - pd.Timedelta('1 days')].set_index('hour').sort_index()
-#     today = df[df['date'] == pd.Timestamp.now().date()].set_index('hour').sort_index()
-#     past = past.add_suffix('_past')
-#     yesterday = yesterday.add_suffix('_yesterday')
-#     today = today.add_suffix('_today')
-#     res = pd.concat([yesterday, today, past], 1)
-#
-#     # make picture
-#     _make_picture(res, column='views_')
-#     _make_picture(res, column='subs_')
-#     # make text
-#     text = _statistic_text(df)
-#     return text
 
 
 def get_yt_info(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (int, int):
