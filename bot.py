@@ -48,6 +48,7 @@ markup = types.ReplyKeyboardMarkup()
 markup.row(KeyboardButton('youtube 🎬'), KeyboardButton('statistic 📈'))
 markup.row('🌤 weather 🌧')
 markup.row('📱 internet 🌐')
+markup.row('🍾 alco 🥂')
 
 
 @dp.message_handler(commands=['start', 'help'])
@@ -78,10 +79,27 @@ async def send_welcome(message):
     media = types.MediaGroup()
     text = show_day_statistic(database)
     # TODO убрать хардкод названий файлов
-    media.attach_photo(types.InputFile('subs_hourly.png'), text)
     media.attach_photo(types.InputFile('views_hourly.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
+    cursor.execute(f"""select count(*) from yt_query_log
+                        where datetime >= current_date and chat_id =  = {message['from']['id']}""")
+    res = cursor.fetchone()
+    await message.reply(str(f'Ну а ещё ты заправшивала статистику {int(res)} раз за сегодня'))
+
+
+@dp.message_handler(regexp='..alco..')
+async def send_welcome(message):
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
+    price = 250
+    reason = 'праздничный ужин'
+    cursor.execute(f"insert into alco(date, price, reason) values(current_date, {price}, {reason})")
+    conn.commit()
+    await types.ChatActions.typing(1)
+    await message.reply(str('цена и повод записаны по умолчанию'))
 
 
 @dp.message_handler(regexp='..internet..')
@@ -94,7 +112,12 @@ async def send_welcome(message):
     await message.reply(str(print_gb_info(get_gbs_left(*res))))
 
 
-async def auto_yt_check(send=False):
+async def auto_yt_check(send=True):
+    """
+
+    :param send:
+    :return:
+    """
     now = datetime.datetime.now().time()
     current_subs, current_view = get_yt_info(youtube_token)
     conn = psycopg2.connect(database)

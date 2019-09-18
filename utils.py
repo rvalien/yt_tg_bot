@@ -58,16 +58,14 @@ def _statistic_text(df: pd.DataFrame) -> str:
     :param df:
     :return: text to send with images
     """
-    max_sub = df.loc[df['subs_hourly_today'] == df['subs_hourly_today'].max()][['subs_hourly_today']]
     max_view = df.loc[df['views_hourly_today'] == df['views_hourly_today'].max()][['views_hourly_today']]
+    first = int(df['subscribers_today'][0])
+    last = int(df['subscribers_today'].dropna().max())
 
-
-    # в период с {df.iloc[0]['datetime'].hour} по {df.iloc[-1]['datetime'].hour}
-
-    # подписалось {max_sub - df.iloc[0]['subscribers']}.
     stat_text = f"""
-    пик просмотров в {max_view.index[0]} ч. ({int(max_view.values[0][0])})
-    пик подписок в {max_sub.index[0]} ч. ({int(max_sub.values[0][0])})"""
+    {datetime.datetime.now().date()} подписок: {last - first}
+    пик просмотров в {int(max_view.index[0])} ч. ({int(max_view.values[0][0])})
+    """
 
     return stat_text
 
@@ -105,7 +103,7 @@ def show_day_statistic(database: str, path: str = 'subs_.png') -> str:
 
     # make picture
     _make_picture(df, column='subs_hourly')
-    _make_picture(df, column='views_hourly')
+    # _make_picture(df, column='views_hourly')
     return _statistic_text(df)
 
 
