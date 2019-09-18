@@ -85,21 +85,21 @@ async def send_welcome(message):
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
     cursor.execute(f"""select count(*) from yt_query_log
-                        where datetime >= current_date and chat_id =  = {message['from']['id']}""")
+                        where datetime >= current_date and chat_id = '{message['from']['id']}'""")
     res = cursor.fetchone()
-    await message.reply(str(f'Ну а ещё ты заправшивала статистику {int(res)} раз за сегодня'))
+    await message.reply(str(f'Ну а ещё ты заправшивала статистику {res[0]} раз за сегодня'))
 
 
 @dp.message_handler(regexp='..alco..')
 async def send_welcome(message):
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
-    price = 250
-    reason = 'праздничный ужин'
-    cursor.execute(f"insert into alco(date, price, reason) values(current_date, {price}, {reason})")
-    conn.commit()
     await types.ChatActions.typing(1)
-    await message.reply(str('цена и повод записаны по умолчанию'))
+    price = 400
+    reason = 'праздничный ужин'
+    cursor.execute(f"insert into alco(date, price, reason) values(current_date, {price}, '{reason}')")
+    conn.commit()
+    await message.reply(str('записано'))
 
 
 @dp.message_handler(regexp='..internet..')

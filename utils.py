@@ -49,7 +49,7 @@ def _make_picture(df: pd.DataFrame, column: str = 'views'):
     :return:
     """
     df.filter(regex=column) .plot(figsize=(10, 5), xticks=list(range(0, 25)),
-                                  title=column).get_figure().savefig(f'{column}.png')
+                                  title=column).get_figure().savefig('views_hourly.png')
 
 
 def _statistic_text(df: pd.DataFrame) -> str:
@@ -102,8 +102,8 @@ def show_day_statistic(database: str, path: str = 'subs_.png') -> str:
     df = _transform_db_data(df)
 
     # make picture
-    _make_picture(df, column='subs_hourly')
-    # _make_picture(df, column='views_hourly')
+    # _make_picture(df, column='subs_hourly')
+    _make_picture(df, column='views_hourly')
     return _statistic_text(df)
 
 
