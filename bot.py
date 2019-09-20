@@ -134,7 +134,9 @@ async def auto_yt_check(send=True):
                        values('{current_subs}', '{current_view}', now())''')
     conn.commit()
     conn.close()
+
     if send:
+        print(send)
         if night_to < now < night_from:
             if len(db_subs) != 0 and db_subs[0][0] == current_subs:
                 db_subs = db_subs[0][0]
