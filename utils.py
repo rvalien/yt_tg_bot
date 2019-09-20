@@ -91,7 +91,7 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     return res
 
 
-def show_day_statistic(database: str, path: str = 'subs_.png') -> str:
+def make_text_and_picture(database: str, ) -> str:
     """
 
     :param database: connection string of database

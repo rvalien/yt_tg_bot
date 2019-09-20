@@ -8,7 +8,7 @@ from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
-from utils import get_yt_info, printer, get_weather, show_day_statistic, get_gbs_left, print_gb_info
+from utils import get_yt_info, printer, get_weather, make_text_and_picture, get_gbs_left, print_gb_info
 
 
 delay = 900
@@ -22,26 +22,28 @@ telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
 weather_token = os.environ['WEATHER_TOKEN']
 database = os.environ['DATABASE_URL']
+stat_table = os.environ['CHANNEL_NAME']
+stat_table = 'detektivo'
 
 
 bot = Bot(token=telegram_token)
 dp = Dispatcher(bot)
 
-night_from = datetime.time(19)
-night_to = datetime.time(5)
+night_from = datetime.time(22)
+night_to = datetime.time(8)
 
-conn_pos = psycopg2.connect(database)
-cursor_pos = conn_pos.cursor()
+conn = psycopg2.connect(database)
+cursor = conn.cursor()
 
 chat_ids = []
-cursor_pos.execute('select chat_id from chat_ids')
-for item in cursor_pos.fetchall():
+cursor.execute('select chat_id from chat_ids')
+for item in cursor.fetchall():
     chat_ids.append(item[0])
 
-cursor_pos.execute('select subscribers from detektivo where datetime = (select max(datetime) from detektivo)')
-subscribers = cursor_pos.fetchall()
+cursor.execute(f'select subscribers from {stat_table} where datetime = (select max(datetime) from {stat_table})')
+subscribers = cursor.fetchall()
 subscribers = subscribers[0][0]
-conn_pos.close()
+conn.close()
 
 
 markup = types.ReplyKeyboardMarkup()
@@ -54,7 +56,11 @@ markup.row('🍾 alco 🥂')
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
     await types.ChatActions.typing(1)
-    await message.reply("Привет, я GladOS и я умею:\n /youtube \n /weather", reply_markup=markup)
+    await message.reply("""Привет, я GladOS. у меня есть кнопки:\n
+                                                                youtube \n
+                                                                statistic\n
+                                                                weather\n
+                                                                internet\n""", reply_markup=markup)
 
 
 @dp.message_handler(regexp='youtube..')
@@ -75,9 +81,8 @@ async def send_welcome(message):
 
 @dp.message_handler(regexp='statistic..')
 async def send_welcome(message):
-
     media = types.MediaGroup()
-    text = show_day_statistic(database)
+    text = make_text_and_picture(database)
     # TODO убрать хардкод названий файлов
     media.attach_photo(types.InputFile('views_hourly.png'), text)
     await types.ChatActions.upload_photo()
@@ -87,7 +92,8 @@ async def send_welcome(message):
     cursor.execute(f"""select count(*) from yt_query_log
                         where datetime >= current_date and chat_id = '{message['from']['id']}'""")
     res = cursor.fetchone()
-    await message.reply(str(f'Ну а ещё ты заправшивала статистику {res[0]} раз за сегодня'))
+    if res[0] > 5:
+        await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
 
 
 @dp.message_handler(regexp='..alco..')
@@ -118,14 +124,14 @@ async def auto_yt_check(send=True):
     :param send:
     :return:
     """
-    now = datetime.datetime.now().time()
+    now = datetime.datetime.utcnow().time()
     current_subs, current_view = get_yt_info(youtube_token)
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
-    cursor.execute('select * from detektivo where datetime = (select max(datetime) from detektivo)')
+    cursor.execute(f'select * from {stat_table} where datetime = (select max(datetime) from {stat_table})')
     db_subs = cursor.fetchall()
-    cursor.execute(f'''insert into detektivo (subscribers, views, datetime)
-                        values('{current_subs}', '{current_view}', now())''')
+    cursor.execute(f'''insert into {stat_table} (subscribers, views, datetime)
+                       values('{current_subs}', '{current_view}', now())''')
     conn.commit()
     conn.close()
     if send:
