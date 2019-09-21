@@ -120,7 +120,7 @@ def make_text_and_picture(database: str, ) -> str:
 
     # make picture
     # _make_picture(df, column='subs_hourly')
-    _make_picture(df, column='views_hourly')
+    _make_picture(df, column='views_hourly_')
     return _statistic_text(df)
 
 
