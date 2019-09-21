@@ -41,15 +41,22 @@ def _get_db_data(database: str, depth_days: int = 2, tz: int = 3) -> pd.DataFram
     return df
 
 
-def _make_picture(df: pd.DataFrame, column: str = 'views'):
+def _make_picture(df: pd.DataFrame, column: str = 'views_hourly_'):
     """
     method prepare and save 2 pictures based on dataframe
     :param df: dataframe with a few days statistic
     :param column: part of columns name, that we need to make a plot
     :return:
     """
-    df.filter(regex=column) .plot(figsize=(10, 5), xticks=list(range(0, 25)),
-                                  title=column).get_figure().savefig('views_hourly.png')
+
+    df = df.filter(regex=column)
+    df = df.rename(columns={'views_hourly_yesterday': 'yesterday',
+                            'views_hourly_today': 'today',
+                            'views_hourly_past': 'past'})
+    df.index.names = ['hour']
+
+    df.plot(figsize=(10, 5), xticks=list(range(0, 25)),
+            title=column.split('_')[0]).get_figure().savefig(f'{column}.png')
 
 
 def _statistic_text(df: pd.DataFrame) -> str:

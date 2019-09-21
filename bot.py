@@ -84,7 +84,7 @@ async def send_welcome(message):
     media = types.MediaGroup()
     text = make_text_and_picture(database)
     # TODO убрать хардкод названий файлов
-    media.attach_photo(types.InputFile('views_hourly.png'), text)
+    media.attach_photo(types.InputFile('views_hourly_.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
     conn = psycopg2.connect(database)
