@@ -23,7 +23,6 @@ youtube_token = os.environ['YOUTUBE_TOKEN']
 weather_token = os.environ['WEATHER_TOKEN']
 database = os.environ['DATABASE_URL']
 stat_table = os.environ['CHANNEL_NAME']
-stat_table = 'detektivo'
 
 
 bot = Bot(token=telegram_token)
@@ -39,6 +38,7 @@ chat_ids = []
 cursor.execute('select chat_id from chat_ids')
 for item in cursor.fetchall():
     chat_ids.append(item[0])
+    print(chat_ids)
 
 cursor.execute(f'select subscribers from {stat_table} where datetime = (select max(datetime) from {stat_table})')
 subscribers = cursor.fetchall()
@@ -136,7 +136,6 @@ async def auto_yt_check(send=True):
     conn.close()
 
     if send:
-        print(send)
         if night_to < now < night_from:
             if len(db_subs) != 0 and db_subs[0][0] == current_subs:
                 db_subs = db_subs[0][0]
@@ -146,8 +145,9 @@ async def auto_yt_check(send=True):
             else:
                 print('отправка')
                 for chat_id in chat_ids:
+                    print(chat_id)
                     await types.ChatActions.typing(1)
-                    await bot.send_message(chat_id, printer(current_subs, current_view))
+                    await bot.send_message(chat_id, str(current_subs))
 
 
 def repeat(coro, loop):
