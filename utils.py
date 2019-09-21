@@ -3,6 +3,9 @@ import pandas as pd
 import requests
 import psycopg2
 import datetime
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import ticker
 
 
 def printer(subs: int, views: int) -> str:
@@ -48,15 +51,22 @@ def _make_picture(df: pd.DataFrame, column: str = 'views_hourly_'):
     :param column: part of columns name, that we need to make a plot
     :return:
     """
+    x = df.index.values
+    fig = plt.figure(figsize=(10, 5))
+    ax = fig.add_subplot(111)
 
-    df = df.filter(regex=column)
-    df = df.rename(columns={'views_hourly_yesterday': 'yesterday',
-                            'views_hourly_today': 'today',
-                            'views_hourly_past': 'past'})
-    df.index.names = ['hour']
+    ax.plot(x, df['views_hourly_yesterday'], c='b', label='yesterday')
+    ax.plot(x, df['views_hourly_today'], c='g', label='today', linewidth=5.0)
+    ax.plot(x, df['views_hourly_past'], c='r', label='past')
+    ax.set(xlim=[0, 23])
+    # ax.minorticks_on()
+    ax.set_xlabel('hour', fontsize=15, )
+    ax.set_ylabel('views', fontsize=15, )
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    leg = plt.legend()
 
-    df.plot(figsize=(10, 5), xticks=list(range(0, 25)),
-            title=column.split('_')[0]).get_figure().savefig(f'{column}.png')
+#     plt.show()
+    plt.savefig(f'{column}.png')
 
 
 def _statistic_text(df: pd.DataFrame) -> str:
