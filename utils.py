@@ -55,7 +55,7 @@ def _make_picture(data: pd.DataFrame, column: str = 'views_hourly_'):
     df.columns = df.columns.str.split(column).str[1]
     x = df.index.values
     fig = plt.figure(figsize=(10, 5))
-    ax = fig.add_subplot(100)
+    ax = fig.add_subplot(111)
     ax.plot(x, df['today'], c='g', label='today', linewidth=5.0)
     ax.plot(x, df['yesterday'], c='b', label='yesterday', linewidth=3.0)
     ax.plot(x, df['past'], c='r', label='past')
