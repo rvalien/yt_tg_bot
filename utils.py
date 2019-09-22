@@ -44,28 +44,27 @@ def _get_db_data(database: str, depth_days: int = 2, tz: int = 3) -> pd.DataFram
     return df
 
 
-def _make_picture(df: pd.DataFrame, column: str = 'views_hourly_'):
+def _make_picture(data: pd.DataFrame, column: str = 'views_hourly_'):
     """
     method prepare and save 2 pictures based on dataframe
     :param df: dataframe with a few days statistic
     :param column: part of columns name, that we need to make a plot
     :return:
     """
+    df = data.filter(regex=column)
+    df.columns = df.columns.str.split(column).str[1]
     x = df.index.values
     fig = plt.figure(figsize=(10, 5))
-    ax = fig.add_subplot(111)
-
-    ax.plot(x, df['views_hourly_yesterday'], c='b', label='yesterday')
-    ax.plot(x, df['views_hourly_today'], c='g', label='today', linewidth=5.0)
-    ax.plot(x, df['views_hourly_past'], c='r', label='past')
+    ax = fig.add_subplot(100)
+    ax.plot(x, df['today'], c='g', label='today', linewidth=5.0)
+    ax.plot(x, df['yesterday'], c='b', label='yesterday', linewidth=3.0)
+    ax.plot(x, df['past'], c='r', label='past')
     ax.set(xlim=[0, 23])
-    # ax.minorticks_on()
     ax.set_xlabel('hour', fontsize=15, )
     ax.set_ylabel('views', fontsize=15, )
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
     leg = plt.legend()
 
-#     plt.show()
     plt.savefig(f'{column}.png')
 
 
@@ -88,23 +87,28 @@ def _statistic_text(df: pd.DataFrame) -> str:
 
 
 def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-
-    :param df: raw dataframe from database
-    :return: transformed dataframe
-    """
-    df = df.assign(subs_shifted=df['subscribers'].shift(1), views_shifted=df['views'].shift(1))
-    df = df.assign(subs_hourly=df['subscribers'] - df['subs_shifted'], views_hourly=df['views'] - df['views_shifted'])
-    df = df.drop(columns=['subs_shifted', 'views_shifted'])
-
     today = df[df['cur_date_gmt'] == max(list(df['cur_date_gmt']))].set_index('cur_hour_gmt').sort_index()
     yesterday = df[df['cur_date_gmt'] == (1 + min(list(df['cur_date_gmt'])))].set_index('cur_hour_gmt').sort_index()
     past = df[df['cur_date_gmt'] == min(list(df['cur_date_gmt']))].set_index('cur_hour_gmt').sort_index()
-    past = past.add_suffix('_past')
-    yesterday = yesterday.add_suffix('_yesterday')
+
     today = today.add_suffix('_today')
-    res = pd.concat([yesterday, today, past], 1)
-    # res = res.drop(columns=res.filter(regex='cur_date_gmt_').columns)
+    yesterday = yesterday.add_suffix('_yesterday')
+    past = past.add_suffix('_past')
+
+    res = pd.concat([today, yesterday, past], 1)
+    res['views_past'] = res['views_past'].interpolate().astype('int')
+    res['views_yesterday'] = res['views_yesterday'].interpolate().astype('int')
+    res.index.name = 'hour'
+    res.drop(columns=['cur_date_gmt_today', 'cur_date_gmt_yesterday', 'cur_date_gmt_past'], inplace=True)
+    res = res.assign(views_today_shifted=res['views_today'].shift(1),
+                     views_yesterday_shifted=res['views_yesterday'].shift(1),
+                     views_past_shifted=res['views_past'].shift(1))
+
+    res = res.assign(views_hourly_today=res['views_today'] - res['views_today_shifted'],
+                     views_hourly_yesterday=res['views_yesterday'] - res['views_yesterday_shifted'],
+                     views_hourly_past=res['views_past'] - res['views_past_shifted'],
+                     )
+
     return res
 
 
