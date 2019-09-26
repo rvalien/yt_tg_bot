@@ -58,7 +58,7 @@ def _make_picture(data: pd.DataFrame, column: str = 'views_hourly_'):
     ax = fig.add_subplot(111)
     ax.plot(x, df['today'], c='g', label='today', linewidth=5.0)
     ax.plot(x, df['yesterday'], c='b', label='yesterday', linewidth=3.0)
-    ax.plot(x, df['past'], c='r', label='past')
+    # ax.plot(x, df['past'], c='r', label='past')
     ax.set(xlim=[0, 23])
     ax.set_xlabel('hour', fontsize=15, )
     ax.set_ylabel('views', fontsize=15, )
