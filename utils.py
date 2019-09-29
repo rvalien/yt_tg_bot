@@ -21,7 +21,7 @@ def printer(subs: int, views: int) -> str:
     return f'{s1}\n{s2}'
 
 
-def _get_db_data(database: str, depth_days: int = 2, tz: int = 3) -> pd.DataFrame:
+def _get_db_data(database: str, quary_name: str = 'day', depth_days: int = 2, tz: int = 3) -> pd.DataFrame:
     """
 
     :param database: database connection string
@@ -30,18 +30,35 @@ def _get_db_data(database: str, depth_days: int = 2, tz: int = 3) -> pd.DataFram
     :return: result dataframe
     """
     conn = psycopg2.connect(database)
-    query = f"""select
-                    min(subscribers) as subscribers,
-                    min(views) as views, 
-                    date_part('day', datetime  + interval '{tz} hours') as cur_date_gmt,
-                    date_part('hour', datetime  + interval '{tz} hours') as cur_hour_gmt
-                from
-                    detektivo where datetime  + interval '{tz} hours' >= current_date - INTERVAL '{depth_days} DAY'
-                group by cur_date_gmt, cur_hour_gmt
-                order by cur_date_gmt, cur_hour_gmt"""
+    with open(f'./sql_queries/{quary_name}.sql', encoding='utf-8', mode='r') as o:
+        query = o.read()
+    df = pd.read_sql(query.format(tz, depth_days), conn)
 
-    df = pd.read_sql(query, conn)
     return df
+
+
+def month_stat_pic(df):
+    x = df.index.values
+    fig = plt.figure(figsize=(10, 5))
+    ax = fig.add_subplot(111)
+    for i in df.columns:
+        ax.plot(x, df[i], label=i, linewidth=3.0)
+    ax.set(xlim=[1, 31])
+    ax.set_xlabel('day', fontsize=15, )
+    ax.set_ylabel('views', fontsize=15, )
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    leg = plt.legend()
+    plt.savefig('month.png')
+
+
+def month_stat(database):
+    df = _get_db_data(database, 'month', depth_days=70)
+    res = pd.DataFrame(index=list(range(1, 32)))
+    for i in df['month'].unique():
+        print(i)
+        temp_df = df.loc[df['month'] == i][['day', 'views']].set_index('day').add_suffix(f'_{int(i)}')
+        res = pd.merge(res, temp_df, how='outer', left_index=True, right_index=True)
+    return res
 
 
 def _make_picture(data: pd.DataFrame, column: str = 'views_hourly_'):
@@ -87,9 +104,9 @@ def _statistic_text(df: pd.DataFrame) -> str:
 
 
 def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
-    today = df[df['cur_date_gmt'] == max(list(df['cur_date_gmt']))].set_index('cur_hour_gmt').sort_index()
-    yesterday = df[df['cur_date_gmt'] == (1 + min(list(df['cur_date_gmt'])))].set_index('cur_hour_gmt').sort_index()
-    past = df[df['cur_date_gmt'] == min(list(df['cur_date_gmt']))].set_index('cur_hour_gmt').sort_index()
+    today = df[df['day'] == max(list(df['day']))].set_index('hour').sort_index()
+    yesterday = df[df['day'] == (1 + min(list(df['day'])))].set_index('hour').sort_index()
+    past = df[df['day'] == min(list(df['day']))].set_index('hour').sort_index()
 
     today = today.add_suffix('_today')
     yesterday = yesterday.add_suffix('_yesterday')
@@ -99,7 +116,7 @@ def _transform_db_data(df: pd.DataFrame) -> pd.DataFrame:
     res['views_past'] = res['views_past'].interpolate().astype('int')
     res['views_yesterday'] = res['views_yesterday'].interpolate().astype('int')
     res.index.name = 'hour'
-    res.drop(columns=['cur_date_gmt_today', 'cur_date_gmt_yesterday', 'cur_date_gmt_past'], inplace=True)
+    res.drop(columns=['day_today', 'day_yesterday', 'day_past'], inplace=True)
     res = res.assign(views_today_shifted=res['views_today'].shift(1),
                      views_yesterday_shifted=res['views_yesterday'].shift(1),
                      views_past_shifted=res['views_past'].shift(1))
@@ -123,9 +140,13 @@ def make_text_and_picture(database: str, ) -> str:
     df = _transform_db_data(df)
 
     # make picture
-    # _make_picture(df, column='subs_hourly')
     _make_picture(df, column='views_hourly_')
     return _statistic_text(df)
+
+
+def make_month_picture(database: str) -> str:
+    df = month_stat(database)
+    month_stat_pic(df)
 
 
 def get_yt_info(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (int, int):

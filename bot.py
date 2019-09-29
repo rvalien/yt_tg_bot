@@ -8,7 +8,7 @@ from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
-from utils import get_yt_info, printer, get_weather, make_text_and_picture, get_gbs_left, print_gb_info
+from utils import get_yt_info, printer, get_weather, make_text_and_picture, get_gbs_left, print_gb_info, make_month_picture
 
 
 delay = 900
@@ -51,6 +51,7 @@ markup.row(KeyboardButton('youtube 🎬'), KeyboardButton('statistic 📈'))
 markup.row('🌤 weather 🌧')
 markup.row('📱 internet 🌐')
 markup.row('🍾 alco 🥂')
+markup.row('month')
 
 
 @dp.message_handler(commands=['start', 'help'])
@@ -94,6 +95,15 @@ async def send_welcome(message):
     res = cursor.fetchone()
     if res[0] > 5:
         await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
+
+
+@dp.message_handler(regexp='month')
+async def send_welcome(message):
+    make_month_picture(database)
+    media = types.MediaGroup()
+    media.attach_photo(types.InputFile('month.png'), "статистика за 2 месяца")
+    await types.ChatActions.upload_photo()
+    await message.reply_media_group(media=media)
 
 
 @dp.message_handler(regexp='..alco..')
