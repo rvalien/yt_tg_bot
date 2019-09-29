@@ -47,21 +47,18 @@ conn.close()
 
 
 markup = types.ReplyKeyboardMarkup()
-markup.row(KeyboardButton('youtube 🎬'), KeyboardButton('statistic 📈'))
+markup.row(KeyboardButton('youtube 🎬'), KeyboardButton('statistic 📈'), KeyboardButton('month 📅'))
 markup.row('🌤 weather 🌧')
 markup.row('📱 internet 🌐')
 markup.row('🍾 alco 🥂')
-markup.row('month')
 
+# InlineKeyboardMarkup
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
     await types.ChatActions.typing(1)
-    await message.reply("""Привет, я GladOS. у меня есть кнопки:\n
-                                                                youtube \n
-                                                                statistic\n
-                                                                weather\n
-                                                                internet\n""", reply_markup=markup)
+    await message.reply("""Привет, я GladOS. я умею показывать статистику по просмотрам youtube канала""",
+                        reply_markup=markup)
 
 
 @dp.message_handler(regexp='youtube..')
@@ -97,7 +94,7 @@ async def send_welcome(message):
         await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
 
 
-@dp.message_handler(regexp='month')
+@dp.message_handler(regexp='month..')
 async def send_welcome(message):
     make_month_picture(database)
     media = types.MediaGroup()
