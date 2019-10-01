@@ -3,7 +3,6 @@ import pandas as pd
 import requests
 import psycopg2
 import datetime
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 
@@ -53,6 +52,7 @@ def month_stat_pic(df):
 
 def month_stat(database):
     df = _get_db_data(database, 'month', depth_days=70)
+    df.loc[df['views'] < 0, ['views']] = None
     res = pd.DataFrame(index=list(range(1, 32)))
     for i in df['month'].unique():
         print(i)
