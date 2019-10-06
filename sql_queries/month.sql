@@ -8,7 +8,7 @@ from (
         first_value(views) over w,
         last_value(views) over w
     from detektivo
-    where datetime + interval '{0} hours' >= current_date - interval '{1} DAY'
+    where date_part('month', datetime + interval '{0} hours') >= date_part('month', now() - interval '{1} month')
         window w as (
             PARTITION BY date_trunc('day', datetime + interval '{0} hours' )
             ORDER BY datetime

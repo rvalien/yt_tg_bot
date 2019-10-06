@@ -20,7 +20,7 @@ def printer(subs: int, views: int) -> str:
     return f'{s1}\n{s2}'
 
 
-def _get_db_data(database: str, quary_name: str = 'day', depth_days: int = 2, tz: int = 3) -> pd.DataFrame:
+def _get_db_data(database: str, quary_name: str = 'day', depth_month: int = 2, tz: int = 3) -> pd.DataFrame:
     """
 
     :param database: database connection string
@@ -31,7 +31,7 @@ def _get_db_data(database: str, quary_name: str = 'day', depth_days: int = 2, tz
     conn = psycopg2.connect(database)
     with open(f'./sql_queries/{quary_name}.sql', encoding='utf-8', mode='r') as o:
         query = o.read()
-    df = pd.read_sql(query.format(tz, depth_days), conn)
+    df = pd.read_sql(query.format(tz, depth_month), conn)
 
     return df
 
@@ -51,7 +51,7 @@ def month_stat_pic(df):
 
 
 def month_stat(database):
-    df = _get_db_data(database, 'month', depth_days=70)
+    df = _get_db_data(database, 'month', depth_month=1)
     df.loc[df['views'] < 0, ['views']] = None
     res = pd.DataFrame(index=list(range(1, 32)))
     for i in df['month'].unique():
