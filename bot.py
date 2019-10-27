@@ -8,15 +8,15 @@ from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
-from utils import get_yt_info, printer, get_weather, make_text_and_picture, get_gbs_left, print_gb_info, make_month_picture
-
+from utils import get_weather, get_gbs_left, print_gb_info
+from youtube_utils import _get_db_data, printer, get_yt_info, _make_picture,  day_stat, week_stat, month_stat
 
 delay = 900
 
 if sys.platform == 'win32':
     from config import *
     print('локальненько в тестовом режимчике')
-    delay = 180
+    delay = 900
 
 telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
@@ -47,12 +47,16 @@ conn.close()
 
 
 markup = types.ReplyKeyboardMarkup()
-markup.row(KeyboardButton('youtube 🎬'), KeyboardButton('statistic 📈'), KeyboardButton('month 📅'))
+markup.row(KeyboardButton('youtube 🎬'),
+           KeyboardButton('day 📈'),
+           KeyboardButton('week 📈'),
+           KeyboardButton('month 📅'))
 markup.row('🌤 weather 🌧')
 markup.row('📱 internet 🌐')
 markup.row('🍾 alco 🥂')
 
 # InlineKeyboardMarkup
+
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
@@ -61,14 +65,27 @@ async def send_welcome(message: types.Message):
                         reply_markup=markup)
 
 
+# TODO брать
 @dp.message_handler(regexp='youtube..')
 async def send_welcome(message):
     await types.ChatActions.typing(1)
     await message.reply(printer(*get_yt_info(youtube_token)))
-    conn_pos = psycopg2.connect(database)
-    cursor_pos = conn_pos.cursor()
-    cursor_pos.execute(f"insert into yt_query_log(chat_id, datetime) values('{message['from']['id']}', now())")
-    conn_pos.commit()
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
+    cursor.execute(f"insert into yt_query_log(chat_id, datetime) values('{message['from']['id']}', now())")
+
+    # two days views count
+    cursor.execute(f"""select count(*) from yt_query_log
+                        where datetime >= current_date and chat_id = '{message['from']['id']}'""")
+    two_days = _get_db_data(database, quary_name='day', depth=0)
+
+    await message.reply(f"вчера :\n{two_days.set_index('date')[['views','subscribers']].iloc[0]}")
+    await message.reply(f"сегодня :\n{two_days.set_index('date')[['views','subscribers']].iloc[-1]}")
+    res = cursor.fetchone()
+    if res[0] > 5:
+        await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
+
+    conn.commit()
 
 
 @dp.message_handler(regexp='..weather..')
@@ -77,30 +94,61 @@ async def send_welcome(message):
     await message.reply(get_weather(weather_token))
 
 
-@dp.message_handler(regexp='statistic..')
+@dp.message_handler(regexp='day..')
 async def send_welcome(message):
     media = types.MediaGroup()
-    text = make_text_and_picture(database)
+    text = "статистика просмотров за два дня"
+    _make_picture(day_stat(database))
     # TODO убрать хардкод названий файлов
-    media.attach_photo(types.InputFile('views_hourly_.png'), text)
+    media.attach_photo(types.InputFile('day.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
-    conn = psycopg2.connect(database)
-    cursor = conn.cursor()
-    cursor.execute(f"""select count(*) from yt_query_log
-                        where datetime >= current_date and chat_id = '{message['from']['id']}'""")
-    res = cursor.fetchone()
-    if res[0] > 5:
-        await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
+
+
+
+
+@dp.message_handler(regexp='week..')
+async def send_welcome(message):
+    media = types.MediaGroup()
+    # text = make_text_and_picture(database)
+    _make_picture(week_stat(database))
+    text = "статистика просмотров за две недели"
+    # TODO убрать хардкод названий файлов
+    media.attach_photo(types.InputFile('week.png'), text)
+    await types.ChatActions.upload_photo()
+    await message.reply_media_group(media=media)
+    # conn = psycopg2.connect(database)
+    # cursor = conn.cursor()
+    # cursor.execute(f"""select count(*) from yt_query_log
+    #                     where datetime >= current_date and chat_id = '{message['from']['id']}'""")
+    # two_weeks = _get_db_data(database, quary_name='two_days')
+    #
+    # await message.reply(f"прошлая неделя :\n{two_weeks.set_index('date').iloc[0]}")
+    # await message.reply(f"эта неделя :\n{two_weeks.set_index('date').iloc[1]}")
+    # res = cursor.fetchone()
+    # if res[0] > 5:
+    #     await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
 
 
 @dp.message_handler(regexp='month..')
 async def send_welcome(message):
-    make_month_picture(database)
+    _make_picture(month_stat(database))
     media = types.MediaGroup()
-    media.attach_photo(types.InputFile('month.png'), "статистика за 2 месяца")
+    media.attach_photo(types.InputFile('month.png'), "статистика просмотров за 2 месяца")
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
+    # conn = psycopg2.connect(database)
+    # cursor = conn.cursor()
+    # cursor.execute(f"""select count(*) from yt_query_log
+    #                     where datetime >= current_date and chat_id = '{message['from']['id']}'""")
+    # two_month = _get_db_data(database, quary_name='two_days')
+    # two_month = _get_db_data(database, quary_name='two_days')
+    #
+    # await message.reply(f"прошлая неделя :\n{two_weeks.set_index('date').iloc[0]}")
+    # await message.reply(f"эта неделя :\n{two_weeks.set_index('date').iloc[1]}")
+    # res = cursor.fetchone()
+    # if res[0] > 5:
+    #     await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
 
 
 @dp.message_handler(regexp='..alco..')
@@ -154,7 +202,7 @@ async def auto_yt_check(send=True):
                 for chat_id in chat_ids:
                     print(chat_id)
                     await types.ChatActions.typing(1)
-                    await bot.send_message(chat_id, str(current_subs))
+                    await bot.send_message(chat_id, str(f'Подписки попурли! Сейчас: {current_subs}'))
 
 
 def repeat(coro, loop):
