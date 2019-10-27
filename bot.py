@@ -105,8 +105,6 @@ async def send_welcome(message):
     await message.reply_media_group(media=media)
 
 
-
-
 @dp.message_handler(regexp='week..')
 async def send_welcome(message):
     media = types.MediaGroup()

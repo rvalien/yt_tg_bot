@@ -94,15 +94,11 @@ def month_stat(database):
 
 
 def _make_picture(df: pd.DataFrame):
-    name = ''
+    name = 'day'
     df = df.filter(like='views')
     x = df.index.values
-    if df.shape[0] == 24:
-        name = 'day'
-
-    elif df.shape[0] == 7:
+    if df.shape[0] == 7:
         name = 'week'
-
     elif df.shape[0] == 31:
         name = 'month'
     print(name)
