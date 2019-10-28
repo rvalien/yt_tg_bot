@@ -55,15 +55,23 @@ markup.row('🌤 weather 🌧')
 markup.row('📱 internet 🌐')
 markup.row('🍾 alco 🥂')
 
-# InlineKeyboardMarkup
+markupin = types.InlineKeyboardMarkup()
+inline_btn_1 = types.InlineKeyboardButton('youtube', callback_data='button1')
+inline_kb1 = markupin.add(inline_btn_1)
 
 
-@dp.message_handler(commands=['start', 'help'])
+@dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
     await types.ChatActions.typing(1)
     await message.reply("""Привет, я GladOS. я умею показывать статистику по просмотрам youtube канала""",
                         reply_markup=markup)
 
+#
+# @dp.message_handler(commands=['help'])
+# async def send_welcome(message: types.Message):
+#     await types.ChatActions.typing(1)
+#     await message.reply("""Привет, я GladOS. я умею показывать статистику по просмотрам youtube канала""",
+#                         reply_markup=markupin)
 
 # TODO брать
 @dp.message_handler(regexp='youtube..')
@@ -79,8 +87,10 @@ async def send_welcome(message):
                         where datetime >= current_date and chat_id = '{message['from']['id']}'""")
     two_days = _get_db_data(database, quary_name='day', depth=0)
 
-    await message.reply(f"вчера :\n{two_days.set_index('date')[['views','subscribers']].iloc[0]}")
-    await message.reply(f"сегодня :\n{two_days.set_index('date')[['views','subscribers']].iloc[-1]}")
+    today_views = two_days.set_index('date')['views'].iloc[-1] - two_days.set_index('date')['views'].iloc[0]
+    today_subs = two_days.set_index('date')['subscribers'].iloc[-1] - two_days.set_index('date')['subscribers'].iloc[0]
+
+    await message.reply(f"за сегодня\nпросмотов: {today_views}\nподписчиков: {today_subs}")
     res = cursor.fetchone()
     if res[0] > 5:
         await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
