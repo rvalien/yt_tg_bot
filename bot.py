@@ -8,15 +8,16 @@ from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
-from utils import get_weather, get_gbs_left, print_gb_info
+from utils import get_weather, get_ststel_data, print_ststel_info
 from youtube_utils import _get_db_data, printer, get_yt_info, _make_picture,  day_stat, week_stat, month_stat
 
 delay = 900
 
+# local debug
 if sys.platform == 'win32':
     from config import *
     print('локальненько в тестовом режимчике')
-    delay = 900
+    delay = 300
 
 telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
@@ -28,6 +29,7 @@ stat_table = os.environ['CHANNEL_NAME']
 bot = Bot(token=telegram_token)
 dp = Dispatcher(bot)
 
+# do not disturb time
 night_from = datetime.time(22)
 night_to = datetime.time(8)
 
@@ -38,7 +40,6 @@ chat_ids = []
 cursor.execute('select chat_id from chat_ids')
 for item in cursor.fetchall():
     chat_ids.append(item[0])
-    print(chat_ids)
 
 cursor.execute(f'select subscribers from {stat_table} where datetime = (select max(datetime) from {stat_table})')
 subscribers = cursor.fetchall()
@@ -55,9 +56,9 @@ markup.row('🌤 weather 🌧')
 markup.row('📱 internet 🌐')
 markup.row('🍾 alco 🥂')
 
-markupin = types.InlineKeyboardMarkup()
+markupinline = types.InlineKeyboardMarkup()
 inline_btn_1 = types.InlineKeyboardButton('youtube', callback_data='button1')
-inline_kb1 = markupin.add(inline_btn_1)
+inline_kb1 = markupinline.add(inline_btn_1)
 
 
 @dp.message_handler(commands=['start'])
@@ -66,7 +67,7 @@ async def send_welcome(message: types.Message):
     await message.reply("""Привет, я GladOS. я умею показывать статистику по просмотрам youtube канала""",
                         reply_markup=markup)
 
-#
+# inline buttons test
 # @dp.message_handler(commands=['help'])
 # async def send_welcome(message: types.Message):
 #     await types.ChatActions.typing(1)
@@ -75,7 +76,7 @@ async def send_welcome(message: types.Message):
 
 # TODO брать
 @dp.message_handler(regexp='youtube..')
-async def send_welcome(message):
+async def worker(message):
     await types.ChatActions.typing(1)
     await message.reply(printer(*get_yt_info(youtube_token)))
     conn = psycopg2.connect(database)
@@ -99,13 +100,13 @@ async def send_welcome(message):
 
 
 @dp.message_handler(regexp='..weather..')
-async def send_welcome(message):
+async def worker(message):
     await types.ChatActions.typing(1)
     await message.reply(get_weather(weather_token))
 
 
 @dp.message_handler(regexp='day..')
-async def send_welcome(message):
+async def worker(message):
     media = types.MediaGroup()
     text = "статистика просмотров за два дня"
     _make_picture(day_stat(database))
@@ -116,53 +117,27 @@ async def send_welcome(message):
 
 
 @dp.message_handler(regexp='week..')
-async def send_welcome(message):
+async def worker(message):
     media = types.MediaGroup()
-    # text = make_text_and_picture(database)
     _make_picture(week_stat(database))
     text = "статистика просмотров за две недели"
     # TODO убрать хардкод названий файлов
     media.attach_photo(types.InputFile('week.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
-    # conn = psycopg2.connect(database)
-    # cursor = conn.cursor()
-    # cursor.execute(f"""select count(*) from yt_query_log
-    #                     where datetime >= current_date and chat_id = '{message['from']['id']}'""")
-    # two_weeks = _get_db_data(database, quary_name='two_days')
-    #
-    # await message.reply(f"прошлая неделя :\n{two_weeks.set_index('date').iloc[0]}")
-    # await message.reply(f"эта неделя :\n{two_weeks.set_index('date').iloc[1]}")
-    # res = cursor.fetchone()
-    # if res[0] > 5:
-    #     await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
 
 
 @dp.message_handler(regexp='month..')
-async def send_welcome(message):
+async def worker(message):
     _make_picture(month_stat(database))
     media = types.MediaGroup()
     media.attach_photo(types.InputFile('month.png'), "статистика просмотров за 2 месяца")
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
-    # conn = psycopg2.connect(database)
-    # cursor = conn.cursor()
-    # cursor.execute(f"""select count(*) from yt_query_log
-    #                     where datetime >= current_date and chat_id = '{message['from']['id']}'""")
-    # two_month = _get_db_data(database, quary_name='two_days')
-    # two_month = _get_db_data(database, quary_name='two_days')
-    #
-    # await message.reply(f"прошлая неделя :\n{two_weeks.set_index('date').iloc[0]}")
-    # await message.reply(f"эта неделя :\n{two_weeks.set_index('date').iloc[1]}")
-    # res = cursor.fetchone()
-    # if res[0] > 5:
-    #     await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
 
 
 @dp.message_handler(regexp='..alco..')
-async def send_welcome(message):
-    conn = psycopg2.connect(database)
-    cursor = conn.cursor()
+async def worker(message):
     await types.ChatActions.typing(1)
     price = 400
     reason = 'праздничный ужин'
@@ -172,13 +147,14 @@ async def send_welcome(message):
 
 
 @dp.message_handler(regexp='..internet..')
-async def send_welcome(message):
+async def worker(message):
+    await types.ChatActions.typing(2)
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
     cursor.execute(f"select phone, password from ststel where chat_id = {message['from']['id']}")
     res = cursor.fetchone()
-    await types.ChatActions.typing(1)
-    await message.reply(str(print_gb_info(get_gbs_left(*res))))
+
+    await message.reply(str(print_ststel_info(get_ststel_data(*res))))
 
 
 async def auto_yt_check(send=True):
