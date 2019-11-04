@@ -7,13 +7,13 @@
 
 build on [heroku](https://www.heroku.com/) and use posgressql
 
-![day stat](readme/day.png)
+![day stat](samples/day.png)
 
-![week stat](readme/week.png)
+![week stat](samples/week.png)
 
-![month stat](readme/month.png)
+![month stat](samples/month.png)
 
-[don't forget to create tables](./database_sample/make_main_tables.sql)
+don't forget to [create tables](samples/make_main_tables.sql)
 
 and specify your config vars on Heroku
 
@@ -50,13 +50,13 @@ os.environ['DELAY'] = 900 # sleep time
 
 настроен на работу с сервисом [heroku](https://www.heroku.com/)  и базой данных posgressql.
 
-![day stat](readme/day.png)
+![day stat](samples/day.png)
 
-![week stat](readme/week.png)
+![week stat](samples/week.png)
 
-![month stat](readme/month.png)
+![month stat](samples/month.png)
 
-[не забудь создать нужные таблицы](./database_sample/make_main_tables.sql)
+не забудь [создать нужные таблицы](samples/make_main_tables.sql)
 
 
 и прописать переменные окружения в Heroku
