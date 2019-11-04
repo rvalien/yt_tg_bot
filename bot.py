@@ -11,19 +11,17 @@ from aiogram.dispatcher import Dispatcher
 from utils import get_weather, get_ststel_data, print_ststel_info
 from youtube_utils import _get_db_data, printer, get_yt_info, _make_picture,  day_stat, week_stat, month_stat
 
-delay = 900
-
 # local debug
 if sys.platform == 'win32':
     from config import *
     print('локальненько в тестовом режимчике')
-    delay = 300
 
 telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
 weather_token = os.environ['WEATHER_TOKEN']
 database = os.environ['DATABASE_URL']
 stat_table = os.environ['CHANNEL_NAME']
+delay = os.environ['DELAY']
 
 
 bot = Bot(token=telegram_token)

@@ -26,9 +26,9 @@ build on [heroku](https://www.heroku.com/) and use posgressql
 
 [не забудь создать нужные таблицы](./database_sample/make_main_tables.sql)
 
-and specify your config vars
+and specify your config vars on Heroku
 
-и прописать переменные окружения
+и прописать переменные окружения в Heroku
 
 ##### CHANNEL_NAME
 ##### DATABASE_URL
@@ -36,7 +36,10 @@ and specify your config vars
 ##### TELEGRAM_TOKEN
 ##### WEATHER_TOKEN
 ##### YOUTUBE_TOKEN
+##### DELAY
 
+
+for local use, create `config.py` with environ vars
 для локального испольнения создай файл `config.py` содержащий
 
 ```python
@@ -48,4 +51,5 @@ os.environ['PROJECT_NAME'] = 'bot name'
 os.environ['TELEGRAM_TOKEN'] = '<your token>'
 os.environ['WEATHER_TOKEN'] = '<your token>'
 os.environ['YOUTUBE_TOKEN'] = '<your token>'
+os.environ['DELAY'] = 900 # sleep time
 ```
