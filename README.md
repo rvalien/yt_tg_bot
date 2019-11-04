@@ -7,6 +7,40 @@
 
 build on [heroku](https://www.heroku.com/) and use posgressql
 
+![day stat](readme/day.png)
+
+![week stat](readme/week.png)
+
+![month stat](readme/month.png)
+
+[don't forget to create tables](./database_sample/make_main_tables.sql)
+
+and specify your config vars on Heroku
+
+##### CHANNEL_NAME
+##### DATABASE_URL
+##### PROJECT_NAME
+##### TELEGRAM_TOKEN
+##### WEATHER_TOKEN
+##### YOUTUBE_TOKEN
+##### DELAY
+
+for local use, create `config.py` with environ vars
+
+```python
+import os
+
+os.environ['CHANNEL_NAME'] = 'name of the channel and database you create'
+os.environ['DATABASE_URL'] = 'con. string'
+os.environ['PROJECT_NAME'] = 'bot name'
+os.environ['TELEGRAM_TOKEN'] = '<your token>'
+os.environ['WEATHER_TOKEN'] = '<your token>'
+os.environ['YOUTUBE_TOKEN'] = '<your token>'
+os.environ['DELAY'] = 900 # sleep time
+```
+
+***
+
 # telegram bot для вашего youtube канала: 
 1. пишет логи
 2. возврашать по запросу количетво просмотров и подписчиков канала на youtube.com
@@ -22,11 +56,8 @@ build on [heroku](https://www.heroku.com/) and use posgressql
 
 ![month stat](readme/month.png)
 
-[don't forget to create tables](./database_sample/make_main_tables.sql)
-
 [не забудь создать нужные таблицы](./database_sample/make_main_tables.sql)
 
-and specify your config vars on Heroku
 
 и прописать переменные окружения в Heroku
 
@@ -39,8 +70,7 @@ and specify your config vars on Heroku
 ##### DELAY
 
 
-for local use, create `config.py` with environ vars
-для локального испольнения создай файл `config.py` содержащий
+для локального испольнения, создай файл `config.py` с переменными окружения
 
 ```python
 import os
