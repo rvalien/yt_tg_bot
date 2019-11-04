@@ -1,9 +1,9 @@
 # telegram bot for your youtube channel
-1. create log
-2. show subscribers and view statistic info selected youtube channel.
-3. once every n seconds check the change in the number of subscribers and sends a notification to the designated contacts if the numbers have changed
-4. additionally informs about the weather [openweathermap](https://openweathermap.org/)
-5. show rest of the Internet traffic (only for my provider)
+1. the bot creates log
+2. the bot shows subscribers and view statistic info for selected youtube channel.
+3. once every n seconds the bot check the change in the number of subscribers and sends a notification to the designated contacts if the numbers have changed
+4. additionally the bot informs about the weather [openweathermap](https://openweathermap.org/)
+5. the bot show rest of the Internet traffic (only for my provider)
 
 build on [heroku](https://www.heroku.com/) and use posgressql
 
@@ -17,7 +17,7 @@ don't forget to [create tables](samples/make_main_tables.sql)
 
 and specify your config vars on Heroku
 
-|**var name**|type|description|
+|**variable name**|type|description|
 |:---|:---:|:---|
 `CHANNEL_NAME`|str|name of the channel and table to store data in database|
 `DATABASE_URL`|str|connection string for your database|
@@ -28,7 +28,7 @@ and specify your config vars on Heroku
 `DELAY`|int|sleep time (seconds)|
 
 
-for local use, create `config.py` with environ vars
+for local use, create `config.py` with environ variables
 
 ```python
 import os
@@ -65,7 +65,7 @@ os.environ['DELAY'] = 900 # sleep time
 и прописать переменные окружения в Heroku
 
 
-|**var name**|type|description|
+|**variable name**|type|description|
 |:---|:---:|:---|
 `CHANNEL_NAME`|str|name of the channel and table to store data in database|
 `DATABASE_URL`|str|connection string for your database|

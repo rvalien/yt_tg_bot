@@ -61,20 +61,7 @@ async def send_welcome(message: types.Message):
     await message.reply("""Привет, я GladOS. я умею показывать статистику по просмотрам youtube канала""",
                         reply_markup=markup)
 
-# #  inline buttons test
-# markupinline = types.InlineKeyboardMarkup()
-# inline_btn_1 = types.InlineKeyboardButton('youtube', callback_data='button1')
-# inline_btn_2 = types.InlineKeyboardButton('youtube', callback_data='button2')
-# inline_kb1 = markupinline.add(inline_btn_1)
-# reply_markup = inline_btn_1(inline_btn_2)
 
-# @dp.message_handler(commands=['help'])
-# async def send_welcome(message: types.Message):
-#     await types.ChatActions.typing(1)
-#     await message.reply("""Привет, я GladOS. я умею показывать статистику по просмотрам youtube канала""",
-#                         reply_markup=markupinline)
-
-# TODO брать
 @dp.message_handler(regexp='youtube..')
 async def worker(message):
     await types.ChatActions.typing(1)
