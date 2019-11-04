@@ -21,7 +21,7 @@ youtube_token = os.environ['YOUTUBE_TOKEN']
 weather_token = os.environ['WEATHER_TOKEN']
 database = os.environ['DATABASE_URL']
 stat_table = os.environ['CHANNEL_NAME']
-delay = os.environ['DELAY']
+delay = int(os.environ['DELAY'])
 
 
 bot = Bot(token=telegram_token)
