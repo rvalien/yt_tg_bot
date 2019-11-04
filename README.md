@@ -15,13 +15,12 @@
 
 ![month stat](readme/month.png)
 
-
-не забудь создать нужнык таблицы
+[не забудь создать нужные таблицы](../database_sample/make_main_tables.sql)
 
 и прописать переменные окружения
-CHANNEL_NAME
-DATABASE_URL
-PROJECT_NAME
-TELEGRAM_TOKEN
-WEATHER_TOKEN
-YOUTUBE_TOKEN
+##### CHANNEL_NAME
+##### DATABASE_URL
+##### PROJECT_NAME
+##### TELEGRAM_TOKEN
+##### WEATHER_TOKEN
+##### YOUTUBE_TOKEN
