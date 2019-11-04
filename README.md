@@ -15,7 +15,7 @@
 
 ![month stat](readme/month.png)
 
-[не забудь создать нужные таблицы](../database_sample/make_main_tables.sql)
+[не забудь создать нужные таблицы](./database_sample/make_main_tables.sql)
 
 и прописать переменные окружения
 ##### CHANNEL_NAME
