@@ -128,7 +128,7 @@ def _make_picture(df: pd.DataFrame):
     ax = fig.add_subplot(111)
     width = 3
     for i in df.columns:
-        ax.plot(x, df[i], label=i, linewidth=width)
+        ax.plot(x, df[i], label=f"{name} № {i.split('_')[1]}", linewidth=width)
         width += 5
     ax.set(xlim=[x.min(), x.max()])
     ax.set_xlabel(x_lable, fontsize=15, )
