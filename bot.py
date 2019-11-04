@@ -56,10 +56,6 @@ markup.row('🌤 weather 🌧')
 markup.row('📱 internet 🌐')
 markup.row('🍾 alco 🥂')
 
-markupinline = types.InlineKeyboardMarkup()
-inline_btn_1 = types.InlineKeyboardButton('youtube', callback_data='button1')
-inline_kb1 = markupinline.add(inline_btn_1)
-
 
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
@@ -67,12 +63,18 @@ async def send_welcome(message: types.Message):
     await message.reply("""Привет, я GladOS. я умею показывать статистику по просмотрам youtube канала""",
                         reply_markup=markup)
 
-# inline buttons test
+# #  inline buttons test
+# markupinline = types.InlineKeyboardMarkup()
+# inline_btn_1 = types.InlineKeyboardButton('youtube', callback_data='button1')
+# inline_btn_2 = types.InlineKeyboardButton('youtube', callback_data='button2')
+# inline_kb1 = markupinline.add(inline_btn_1)
+# reply_markup = inline_btn_1(inline_btn_2)
+
 # @dp.message_handler(commands=['help'])
 # async def send_welcome(message: types.Message):
 #     await types.ChatActions.typing(1)
 #     await message.reply("""Привет, я GladOS. я умею показывать статистику по просмотрам youtube канала""",
-#                         reply_markup=markupin)
+#                         reply_markup=markupinline)
 
 # TODO брать
 @dp.message_handler(regexp='youtube..')
@@ -179,14 +181,11 @@ async def auto_yt_check(send=True):
             if len(db_subs) != 0 and db_subs[0][0] == current_subs:
                 db_subs = db_subs[0][0]
                 print(current_subs, db_subs)
-                print('не делаем ничего')
                 pass
             else:
-                print('отправка')
                 for chat_id in chat_ids:
-                    print(chat_id)
                     await types.ChatActions.typing(1)
-                    await bot.send_message(chat_id, str(f'Подписки попурли! Сейчас: {current_subs}'))
+                    await bot.send_message(chat_id, str(f'Подписки попёрли! Сейчас: {current_subs}'))
 
 
 def repeat(coro, loop):

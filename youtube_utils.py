@@ -84,7 +84,6 @@ def week_stat(database: str) -> pd.DataFrame:
     res = pd.DataFrame(index=list(range(1, 8)))
     for i in df['week'].unique():
         temp_df = df.loc[df['week'] == i][[
-            #             'subscribers',
             'views', 'day', 'dayofweek']].set_index('dayofweek').add_suffix(f'_{int(i)}')
         res = pd.merge(res, temp_df, how='outer', left_index=True, right_index=True)
     return res
@@ -102,7 +101,6 @@ def month_stat(database: str) -> pd.DataFrame:
     res = pd.DataFrame(index=list(range(1, 32)))
     for i in df['month'].unique():
         temp_df = df.loc[df['month'] == i][[
-            #             'subscribers',
             'views', 'day']].set_index('day').add_suffix(f'_{int(i)}')
         res = pd.merge(res, temp_df, how='outer', left_index=True, right_index=True)
 
@@ -136,6 +134,7 @@ def _make_picture(df: pd.DataFrame):
     ax.set_xlabel(x_lable, fontsize=15, )
     ax.set_ylabel('views', fontsize=15, )
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    plt.title(f"views statistic by {name}", fontsize=22)
     leg = plt.legend()
 
     plt.savefig(f'{name}.png')

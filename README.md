@@ -9,8 +9,8 @@
 ### раз в n секунд проверять изменение количества подписчиков и отправляет уведомление обозначенным контактам
 ### настроен на работу с сервисом https://www.heroku.com/ и базой данных posgressql.
 
-![day stat](day.png)
+![day stat](readme/day.png)
 
-![week stat](week.png)
+![week stat](readme/week.png)
 
-![month stat](month.png)
+![month stat](readme/month.png)
