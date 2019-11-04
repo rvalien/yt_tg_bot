@@ -17,13 +17,16 @@ don't forget to [create tables](samples/make_main_tables.sql)
 
 and specify your config vars on Heroku
 
-##### CHANNEL_NAME
-##### DATABASE_URL
-##### PROJECT_NAME
-##### TELEGRAM_TOKEN
-##### WEATHER_TOKEN
-##### YOUTUBE_TOKEN
-##### DELAY
+|**var name**|type|description|
+|:---|:---:|:---|
+`CHANNEL_NAME`|str|name of the channel and table to store data in database|
+`DATABASE_URL`|str|connection string for your database|
+`PROJECT_NAME`|str|just name of your project. use to make heroku web hook|
+`TELEGRAM_TOKEN`|str|create your bot and get the token [here](https://tlgrm.ru/docs/bots)|
+`WEATHER_TOKEN`|str|get you own token [here](https://home.openweathermap.org/users/sign_up)|
+`YOUTUBE_TOKEN`|str|your token [more info](https://developers.google.com/youtube/registering_an_application)|
+`DELAY`|int|sleep time (seconds)|
+
 
 for local use, create `config.py` with environ vars
 
@@ -61,13 +64,16 @@ os.environ['DELAY'] = 900 # sleep time
 
 и прописать переменные окружения в Heroku
 
-##### CHANNEL_NAME
-##### DATABASE_URL
-##### PROJECT_NAME
-##### TELEGRAM_TOKEN
-##### WEATHER_TOKEN
-##### YOUTUBE_TOKEN
-##### DELAY
+
+|**var name**|type|description|
+|:---|:---:|:---|
+`CHANNEL_NAME`|str|name of the channel and table to store data in database|
+`DATABASE_URL`|str|connection string for your database|
+`PROJECT_NAME`|str|just name of your project. use to make heroku web hook|
+`TELEGRAM_TOKEN`|str|create your bot and get the token [here](https://tlgrm.ru/docs/bots)|
+`WEATHER_TOKEN`|str|get you own token [here](https://home.openweathermap.org/users/sign_up)|
+`YOUTUBE_TOKEN`|str|your token [more info](https://developers.google.com/youtube/registering_an_application)|
+`DELAY`|int|sleep time (seconds)|
 
 
 для локального испольнения, создай файл `config.py` с переменными окружения
