@@ -46,7 +46,8 @@ conn.close()
 
 
 markup = types.ReplyKeyboardMarkup()
-markup.row(KeyboardButton('youtube 🎬'),
+markup.row(
+    # KeyboardButton('youtube 🎬'),
            KeyboardButton('day 📈'),
            KeyboardButton('week 📈'),
            KeyboardButton('month 📅'))
@@ -62,29 +63,6 @@ async def send_welcome(message: types.Message):
                         reply_markup=markup)
 
 
-@dp.message_handler(regexp='youtube..')
-async def worker(message):
-    await types.ChatActions.typing(1)
-    await message.reply(printer(*get_yt_info(youtube_token)))
-    conn = psycopg2.connect(database)
-    cursor = conn.cursor()
-    cursor.execute(f"insert into yt_query_log(chat_id, datetime) values('{message['from']['id']}', now())")
-
-    cursor.execute(f'''select max(views) - min(views) as views, max(subscribers) - min(subscribers) as subscribers
-                    from {stat_table} where date_trunc('day', datetime + interval '3 hours' ) = current_date''')
-
-    res = cursor.fetchone()
-    await message.reply(f"за сегодня\nпросмотов: {res[0]}\nподписчиков: {res[1]}")
-
-    cursor.execute(f"""select count(*) from yt_query_log
-                        where datetime >= current_date and chat_id = '{message['from']['id']}'""")
-    res = cursor.fetchone()
-    if res[0] > 5:
-        await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
-
-    conn.commit()
-
-
 @dp.message_handler(regexp='..weather..')
 async def worker(message):
     await types.ChatActions.typing(1)
@@ -94,9 +72,8 @@ async def worker(message):
 @dp.message_handler(regexp='day..')
 async def worker(message):
     media = types.MediaGroup()
-    text = "статистика просмотров за два дня"
+    text = f"статистика просмотров за два дня\n\nобщая статистика канала:\n{printer(*get_yt_info(youtube_token))}"
     _make_picture(day_stat(database))
-    # TODO убрать хардкод названий файлов
     media.attach_photo(types.InputFile('day.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
@@ -106,8 +83,7 @@ async def worker(message):
 async def worker(message):
     media = types.MediaGroup()
     _make_picture(week_stat(database))
-    text = "статистика просмотров за две недели"
-    # TODO убрать хардкод названий файлов
+    text = f"статистика просмотров две недели\n\nобщая статистика канала:\n{printer(*get_yt_info(youtube_token))}"
     media.attach_photo(types.InputFile('week.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
@@ -116,8 +92,9 @@ async def worker(message):
 @dp.message_handler(regexp='month..')
 async def worker(message):
     _make_picture(month_stat(database))
+    text = f"статистика просмотров два месяца\n\nобщая статистика канала:\n{printer(*get_yt_info(youtube_token))}"
     media = types.MediaGroup()
-    media.attach_photo(types.InputFile('month.png'), "статистика просмотров за 2 месяца")
+    media.attach_photo(types.InputFile('month.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
 
