@@ -3,13 +3,12 @@ import requests
 import psycopg2
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import os
 from matplotlib import ticker
 
 
 def printer(subs: int, views: int) -> str:
     """
-
     :param subs:
     :param views:
     :return:
@@ -49,7 +48,7 @@ def _get_db_data(database: str, quary_name: str = 'day', period=None, depth: int
     conn = psycopg2.connect(database)
     with open(f'./sql_queries/{quary_name}.sql', encoding='utf-8', mode='r') as o:
         query = o.read()
-    query = query.format(tz, depth, period)
+    query = query.format(tz, depth, period, os.environ['CHANNEL_NAME'])
     df = pd.read_sql(query, conn)
     return df
 
@@ -61,12 +60,12 @@ def day_stat(database: str) -> pd.DataFrame:
     :return: dataftame
     """
 
-    df = _get_db_data(database, quary_name='day', depth=1)
+    df = _get_db_data(database, quary_name='day', period='day')
     df.loc[df['views'] < 0, ['views']] = None
     df = df.fillna(method='backfill')
     res = pd.DataFrame(index=list(range(0, 24)))
     for i in df['day'].unique():
-        temp_df = df.loc[df['day'] == i][['subscribers', 'views', 'hour']].set_index('hour').add_suffix(f'_{int(i)}')
+        temp_df = df.loc[df['day'] == i][['views', 'hour']].set_index('hour').add_suffix(f'_{int(i)}')
         res = pd.merge(res, temp_df, how='outer', left_index=True, right_index=True)
     return res
 
@@ -140,4 +139,6 @@ def _make_picture(df: pd.DataFrame):
     plt.savefig(f'{name}.png')
 
 
+if __name__ == '__main__':
+    pass
 

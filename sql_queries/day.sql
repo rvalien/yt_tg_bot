@@ -1,20 +1,25 @@
-select
-min(subscribers) as subscribers,
-min(views) as views,
-date_part('day', moscow_dt) as day,
-date_part('hour', moscow_dt) as hour,
-moscow_dt as date
+
+/* day */
+
+select distinct
+    hour, date, day, dayofweek, week, month, last_value - first_value as views
 from (
-
-select
-	subscribers,
-	views,
-	datetime,
-	datetime + interval '{0} hours' as moscow_dt
-
-from  detektivo
-    ) raw
-        where moscow_dt >= current_date - INTERVAL '{1} DAY'
-group by date, day, hour
-order by date, day, hour
-
+    select
+        date_part('hour', datetime + interval '{0} hours') as hour,
+        date_trunc('day', datetime + interval '{0} hours' ) as date,
+        extract('day' from datetime + interval '{0} hours' ) as day,
+        extract('week' from datetime + interval '{0} hours') as week,
+        extract('month' from datetime + interval '{0} hours' ) as month,
+        extract(isodow from  datetime + interval '{0} hours' ) as  dayofweek,
+        first_value(views) over w,
+        last_value(views) over w
+    from {3}
+    /*date_trunc returns timestamp like 2019-08-25 00:00:00 */
+    where date_trunc('{2}', datetime + interval '{0} hours')  >= (current_date - interval '{1} {2}')
+        window w as (
+            PARTITION BY date_trunc('hour', datetime + interval '{0} hours' )
+            ORDER BY datetime
+            range between unbounded preceding and unbounded following
+            )
+            ORDER BY datetime) foo
+            ORDER BY date, hour
