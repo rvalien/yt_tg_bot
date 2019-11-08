@@ -70,15 +70,14 @@ async def worker(message):
     cursor = conn.cursor()
     cursor.execute(f"insert into yt_query_log(chat_id, datetime) values('{message['from']['id']}', now())")
 
-    # two days views count
+    cursor.execute(f'''select max(views) - min(views) as views, max(subscribers) - min(subscribers) as subscribers
+                    from {stat_table} where date_trunc('day', datetime + interval '3 hours' ) = current_date''')
+
+    res = cursor.fetchone()
+    await message.reply(f"за сегодня\nпросмотов: {res[0]}\nподписчиков: {res[1]}")
+
     cursor.execute(f"""select count(*) from yt_query_log
                         where datetime >= current_date and chat_id = '{message['from']['id']}'""")
-    two_days = _get_db_data(database, quary_name='day', depth=0)
-
-    today_views = two_days.set_index('date')['views'].iloc[-1] - two_days.set_index('date')['views'].iloc[0]
-    today_subs = two_days.set_index('date')['subscribers'].iloc[-1] - two_days.set_index('date')['subscribers'].iloc[0]
-
-    await message.reply(f"за сегодня\nпросмотов: {today_views}\nподписчиков: {today_subs}")
     res = cursor.fetchone()
     if res[0] > 5:
         await message.reply(str(f'А ещё, ты проверяешь статистику уже {res[0]} раз за сегодня'))
@@ -126,6 +125,8 @@ async def worker(message):
 @dp.message_handler(regexp='..alco..')
 async def worker(message):
     await types.ChatActions.typing(1)
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
     price = 400
     reason = 'праздничный ужин'
     cursor.execute(f"insert into alco(date, price, reason) values(current_date, {price}, '{reason}')")
