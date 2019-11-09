@@ -11,10 +11,4 @@ CREATE TABLE public.<your_table_name>(
 	datetime timestamp NULL
 );
 
-CREATE TABLE public.yt_query_log (
-	chat_id varchar(10) NULL,
-	datetime timestamptz NULL
-);
-
-
 commit
