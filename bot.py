@@ -9,12 +9,12 @@ from aiogram.utils import executor
 from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
 from utils import get_weather, get_ststel_data, print_ststel_info
-from youtube_utils import _get_db_data, printer, get_yt_info, _make_picture,  day_stat, week_stat, month_stat
+from youtube_utils import printer, get_yt_info, _make_picture, day_stat, week_stat, month_stat, statistic_text
 
 # local debug
 if sys.platform == 'win32':
     from config import *
-    print('локальненько в тестовом режимчике')
+    print('local execute')
 
 telegram_token = os.environ['TELEGRAM_TOKEN']
 youtube_token = os.environ['YOUTUBE_TOKEN']
@@ -22,7 +22,6 @@ weather_token = os.environ['WEATHER_TOKEN']
 database = os.environ['DATABASE_URL']
 stat_table = os.environ['CHANNEL_NAME']
 delay = int(os.environ['DELAY'])
-
 
 bot = Bot(token=telegram_token)
 dp = Dispatcher(bot)
@@ -44,13 +43,12 @@ subscribers = cursor.fetchall()
 subscribers = subscribers[0][0]
 conn.close()
 
-
 markup = types.ReplyKeyboardMarkup()
 markup.row(
-    # KeyboardButton('youtube 🎬'),
-           KeyboardButton('day 📈'),
-           KeyboardButton('week 📈'),
-           KeyboardButton('month 📅'))
+    KeyboardButton('day 📈'),
+    KeyboardButton('week 📈'),
+    KeyboardButton('month 📅')
+)
 markup.row('🌤 weather 🌧')
 markup.row('📱 internet 🌐')
 markup.row('🍾 alco 🥂')
@@ -72,8 +70,12 @@ async def worker(message):
 @dp.message_handler(regexp='day..')
 async def worker(message):
     media = types.MediaGroup()
-    text = f"статистика просмотров за два дня\n\nобщая статистика канала:\n{printer(*get_yt_info(youtube_token))}"
-    _make_picture(day_stat(database))
+
+    statistic_df = day_stat(database)
+    stat = statistic_text(statistic_df)
+    _make_picture(statistic_df)
+    sum_stat = printer(*get_yt_info(youtube_token))
+    text = f"статистика просмотров за {statistic_df.shape[1]} дня\n{stat}\nобщая статистика канала:\n{sum_stat}"
     media.attach_photo(types.InputFile('day.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
@@ -82,8 +84,11 @@ async def worker(message):
 @dp.message_handler(regexp='week..')
 async def worker(message):
     media = types.MediaGroup()
-    _make_picture(week_stat(database))
-    text = f"статистика просмотров две недели\n\nобщая статистика канала:\n{printer(*get_yt_info(youtube_token))}"
+    statistic_df = week_stat(database)
+    stat = statistic_text(statistic_df)
+    _make_picture(statistic_df)
+    sum_stat = printer(*get_yt_info(youtube_token))
+    text = f"статистика просмотров за {statistic_df.shape[1]} недели\n{stat}\nобщая статистика канала:\n{sum_stat}"
     media.attach_photo(types.InputFile('week.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
@@ -91,8 +96,12 @@ async def worker(message):
 
 @dp.message_handler(regexp='month..')
 async def worker(message):
+    statistic_df = month_stat(database)
+    stat = statistic_text(statistic_df)
+    _make_picture(statistic_df)
+    sum_stat = printer(*get_yt_info(youtube_token))
+    text = f"статистика просмотров за {statistic_df.shape[1]} месяца\n{stat}\nобщая статистика канала:\n{sum_stat}"
     _make_picture(month_stat(database))
-    text = f"статистика просмотров два месяца\n\nобщая статистика канала:\n{printer(*get_yt_info(youtube_token))}"
     media = types.MediaGroup()
     media.attach_photo(types.InputFile('month.png'), text)
     await types.ChatActions.upload_photo()

@@ -83,7 +83,7 @@ def week_stat(database: str) -> pd.DataFrame:
     res = pd.DataFrame(index=list(range(1, 8)))
     for i in df['week'].unique():
         temp_df = df.loc[df['week'] == i][[
-            'views', 'day', 'dayofweek']].set_index('dayofweek').add_suffix(f'_{int(i)}')
+            'views', 'dayofweek']].set_index('dayofweek').add_suffix(f'_{int(i)}')
         res = pd.merge(res, temp_df, how='outer', left_index=True, right_index=True)
     return res
 
@@ -137,6 +137,18 @@ def _make_picture(df: pd.DataFrame):
     leg = plt.legend()
 
     plt.savefig(f'{name}.png')
+
+
+def statistic_text(df):
+    name = 'day'
+    if df.shape[0] == 7:
+        name = 'week'
+    elif df.shape[0] > 27:
+        name = 'month'
+    text = ''
+    for i in df.columns:
+        text += f"{name} №{i.split('_')[1]} views: {int(df[i].max() - df[i].min())} \n"
+    return text
 
 
 if __name__ == '__main__':
