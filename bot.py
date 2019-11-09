@@ -133,9 +133,11 @@ async def worker(message):
 
 async def auto_yt_check(send=True):
     """
-
-    :param send:
-    :return:
+    check youtube subscribers and sand message every <daley> seconds if new counts not the same as last count
+    add check result to log data
+    disable sending if it's sleep time
+    :param send: sanding massage is active
+    :return: None
     """
     now = datetime.datetime.utcnow().time()
     current_subs, current_view = get_yt_info(youtube_token)

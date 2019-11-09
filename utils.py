@@ -63,7 +63,7 @@ def print_ststel_info(data: dict) -> str:
     if int(data['balance']) != int(data['effectiveBalance']):
         balans = data['balance']
     else:
-        balans =data['balance'], data['effectiveBalance']
+        balans = data['balance'], data['effectiveBalance']
 
     return f'''Бсталось {internet} {i}. Баланс: {balans} р. '''
 

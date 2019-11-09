@@ -76,7 +76,7 @@ def week_stat(database: str) -> pd.DataFrame:
     :param database: postgresql database connection string
     :return: dataftame
     """
-    df = _get_db_data(database, quary_name='ststistic_query', period='week')
+    df = _get_db_data(database, quary_name='statistic_query', period='week')
     df.loc[df['views'] < 0, ['views']] = None
     df = df.fillna(method='backfill')
     df['dayofweek'] = df['dayofweek'].astype(int)
@@ -94,7 +94,7 @@ def month_stat(database: str) -> pd.DataFrame:
     :param database: postgresql database connection string
     :return: dataftame
     """
-    df = _get_db_data(database, quary_name='ststistic_query', period='month')
+    df = _get_db_data(database, quary_name='statistic_query', period='month')
     df.loc[df['views'] < 0, ['views']] = None
     df = df.fillna(method='backfill')
     res = pd.DataFrame(index=list(range(1, 32)))
@@ -139,7 +139,12 @@ def _make_picture(df: pd.DataFrame):
     plt.savefig(f'{name}.png')
 
 
-def statistic_text(df):
+def statistic_text(df: pd.DataFrame) -> str:
+    """
+    count views from dataframe adn format it to string
+    :param df:
+    :return: string
+    """
     name = 'day'
     if df.shape[0] == 7:
         name = 'week'
@@ -153,4 +158,3 @@ def statistic_text(df):
 
 if __name__ == '__main__':
     pass
-
