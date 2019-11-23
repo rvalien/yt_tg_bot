@@ -22,6 +22,7 @@ weather_token = os.environ['WEATHER_TOKEN']
 database = os.environ['DATABASE_URL']
 stat_table = os.environ['CHANNEL_NAME']
 delay = int(os.environ['DELAY'])
+print('delay:', delay)
 
 bot = Bot(token=telegram_token)
 dp = Dispatcher(bot)
@@ -162,6 +163,21 @@ async def auto_yt_check(send=True):
                     await bot.send_message(chat_id, str(f'Подписки попёрли! Сейчас: {current_subs}'))
 
 
+async def count_db_rows():
+    """
+    временная функция для отслеживания количества записей в базе данных. ограничение на бесплатном тарифе 10000 строк
+    :return:
+    """
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
+    cursor.execute(f'select count(*) from {stat_table}')
+    count_rows = cursor.fetchall()
+    if int(count_rows) >= 9800:
+        for chat_id in ['464620721']:
+            # types.ChatActions.typing(1)
+            await bot.send_message(chat_id=chat_id, text=str(f'строк сейчас: {count_rows[0][0]}'))
+
+
 def repeat(coro, loop):
     asyncio.ensure_future(coro(), loop=loop)
     loop.call_later(delay, repeat, coro, loop)
@@ -170,4 +186,5 @@ def repeat(coro, loop):
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.call_later(delay, repeat, auto_yt_check, loop)
+    loop.call_later(delay, repeat, count_db_rows, loop)
     asyncio.run(executor.start_polling(dp, loop=loop))
