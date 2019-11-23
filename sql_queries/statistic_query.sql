@@ -12,7 +12,7 @@ from (
         first_value(views) over w,
         last_value(views) over w
     from {3}
-    /*date_part returns int like 19*/
+    /* date_part returns int like 19 */
     where date_part('{2}', (datetime + interval '{0} hours')) >= date_part('{2}', current_date - interval '{1} {2}')
         window w as (
             PARTITION BY date_trunc('day', datetime + interval '{0} hours' )
