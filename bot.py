@@ -171,7 +171,7 @@ async def count_db_rows():
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
     cursor.execute(f'select count(*) from {stat_table}')
-    count_rows = cursor.fetchall()
+    count_rows = cursor.fetchall()[0][0]
     if int(count_rows) >= 9800:
         for chat_id in ['464620721']:
             # types.ChatActions.typing(1)
