@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title>Telegram bot example</title>
+  </head>
+  <body style="background-color:silver">
+    <span>I't Works!</span><br>
+    {% if repo %}
+    <b>You can find the source code <a href="{{ repo }}">here</a>.</b>
+    {% else %}
+    <pre>GITHUB_URL</pre> env variable not set, so i cannot tell you where to find the source code, sorry :(<br>
+    BUT DON'T WORRY, I'M SURE I'M A FORK OF THE FOLLOWING REPO!<br>
+    <pre>https://github.com/sanguchi/telegram-bot-heroku</pre>
+    {% endif %}
+  </body>
+</html>
