@@ -160,7 +160,7 @@ async def count_db_rows():
     cursor.execute(f'select count(*) from {stat_table}')
     count_rows = cursor.fetchall()[0][0]
     for chat_id in ['464620721']:
-        await bot.send_message(chat_id=chat_id, text=str(f'строк сейчас: {count_rows[0][0]}'))
+        await bot.send_message(chat_id=chat_id, text=str(f'строк сейчас: {count_rows}'))
 
 
 def repeat(coro, loop):
