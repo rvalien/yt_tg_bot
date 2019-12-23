@@ -146,13 +146,13 @@ async def auto_yt_check(send=True):
                 pass
             else:
                 for chat_id in chat_ids:
-                    await types.ChatActions.typing(1)
                     await bot.send_message(chat_id, str(f'Подписки попёрли! Сейчас: {current_subs}'))
 
 
 async def count_db_rows():
     """
     временная функция для отслеживания количества записей в базе данных. ограничение на бесплатном тарифе 10000 строк
+    нужно, пока не переехал на другую бд.
     :return:
     """
     conn = psycopg2.connect(database)
@@ -172,5 +172,5 @@ def repeat(coro, loop):
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.call_later(delay, repeat, auto_yt_check, loop)
-    loop.call_later(3600, repeat, count_db_rows, loop)
+    loop.call_later(3600, repeat, count_db_rows, loop)  # every hour (3600) check rows count in table
     asyncio.run(executor.start_polling(dp, loop=loop))
