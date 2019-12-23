@@ -159,8 +159,9 @@ async def count_db_rows():
     cursor = conn.cursor()
     cursor.execute(f'select count(*) from {stat_table}')
     count_rows = cursor.fetchall()[0][0]
-    for chat_id in ['464620721']:
-        await bot.send_message(chat_id=chat_id, text=str(f'строк сейчас: {count_rows}'))
+    if count_rows > 9500:
+        for chat_id in ['464620721']:
+            await bot.send_message(chat_id=chat_id, text=str(f'Делай резервную копию базы. Строк сейчас: {count_rows}'))
 
 
 def repeat(coro, loop):
@@ -171,5 +172,5 @@ def repeat(coro, loop):
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.call_later(delay, repeat, auto_yt_check, loop)
-    loop.call_later(delay, repeat, count_db_rows, loop)
+    loop.call_later(3600, repeat, count_db_rows, loop)
     asyncio.run(executor.start_polling(dp, loop=loop))
