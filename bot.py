@@ -172,5 +172,6 @@ def repeat(coro, loop):
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.call_later(delay, repeat, auto_yt_check, loop)
-    loop.call_later(3600, repeat, count_db_rows, loop)  # every hour (3600) check rows count in table
+    # TODO араметр 3600 не работает. так как в репите свой делей и он равен 15 минутам - как в глобальном конфиге.
+    # loop.call_later(3600, repeat, count_db_rows, loop)  # every hour (3600) check rows count in table
     asyncio.run(executor.start_polling(dp, loop=loop))
