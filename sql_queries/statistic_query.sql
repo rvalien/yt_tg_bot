@@ -1,23 +1,21 @@
-
-/* month , week */
-
-select distinct date, day, dayofweek, week, month, last_value - first_value as views
-from (
-    select
-	    date_trunc('day', datetime + interval '{0} hours' ) as date,
-	    extract('day' from datetime + interval '{0} hours' ) as day,
-	    extract('week' from datetime + interval '{0} hours') as week,
-        extract('month' from datetime + interval '{0} hours' ) as month,
-	    extract(isodow from  datetime + interval '{0} hours' ) as  dayofweek,
-        first_value(views) over w,
-        last_value(views) over w
-    from {3}
-    /* date_part returns int like 19 */
-    where date_part('{2}', (datetime + interval '{0} hours')) >= date_part('{2}', current_date - interval '{1} {2}')
-        window w as (
-            PARTITION BY date_trunc('day', datetime + interval '{0} hours' )
-            ORDER BY datetime
-            range between unbounded preceding and unbounded following
-            )
-            ORDER BY datetime) foo
-            ORDER BY date
+with
+body as (select generate_series{1} as day_of_{0}),
+cur_{0} as (
+select
+	max(views) - min(views) as views
+	, extract({2} from datetime at time zone 'utc' at time zone 'MSK') as day
+from detektivo d where datetime at time zone 'utc' at time zone 'MSK' >= date_trunc('{0}', now())
+group by day
+order by day
+),
+prew_{0} as (
+select
+	max(views) - min(views) as views
+	, extract({2} from datetime at time zone 'utc' at time zone 'MSK') as day
+from detektivo where datetime at time zone 'utc' at time zone 'MSK' between date_trunc('{0}', now()- interval '1 {0}') and date_trunc('{0}', now())
+group by day
+order by day
+)
+select body.day_of_{0} as {0}, cur_{0}.views as current_{0}_views, prew_{0}.views as previous_{0}_views from body
+left join cur_{0} on body.day_of_{0} = cur_{0}.day
+left join prew_{0} on body.day_of_{0} = prew_{0}.day

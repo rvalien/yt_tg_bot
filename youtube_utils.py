@@ -21,11 +21,11 @@ def printer(subs: int, views: int) -> str:
 
 def get_yt_info(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (int, int):
     """
-
     :param youtube_token: youtube api token
     :param c_id: youtube channel id
     :return: youtube channel subscribers and sum(all videos views)
     """
+
     url = f"https://www.googleapis.com/youtube/v3/channels?part=statistics&id={c_id}&key={youtube_token}"
     data = requests.get(url)
     if data.status_code == 200:
@@ -36,74 +36,26 @@ def get_yt_info(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (
         print(data.status_code)
 
 
-def _get_db_data(database: str, quary_name: str = 'day', period=None, depth: int = 1, tz: int = 3) -> pd.DataFrame:
+def _get_db_data(database: str, query_name: str = 'statistic_query', period: str = None) -> pd.DataFrame:
     """
     :param database: postgresql database connection string
-    :param quary_name: sql query name from dir (sql_queries)
-    :param period: week or month (use only if query name != day)
-    :param depth: how many days ago you need to get from DB
-    :param tz: tz: correct timezone from UTC to GMT +3 (Russia/Moscow)
+    :param query_name: sql query name from dir (sql_queries)
+    :param period: week or month day)
     :return: dataframe
     """
+
     conn = psycopg2.connect(database)
-    with open(f'./sql_queries/{quary_name}.sql', encoding='utf-8', mode='r') as o:
+    with open(f'./sql_queries/{query_name}.sql', encoding='utf-8', mode='r') as o:
         query = o.read()
-    query = query.format(tz, depth, period, os.environ['CHANNEL_NAME'])
+    if period == 'day':
+        query = query.format('day', (0, 24), 'hour')
+    elif period == 'week':
+        query = query.format('week', (1, 7), 'isodow')
+    elif period == 'month':
+        query = query.format('month', (1, 31), 'day')
     df = pd.read_sql(query, conn)
+    df = df.set_index(df.columns[0]).dropna(axis=0, how='all')
     return df
-
-
-def day_stat(database: str) -> pd.DataFrame:
-    """
-    prepare dataframe with 2 last days statistic
-    :param database: postgresql database connection string
-    :return: dataftame
-    """
-
-    df = _get_db_data(database, quary_name='day', period='day')
-    df.loc[df['views'] < 0, ['views']] = None
-    df = df.fillna(method='backfill')
-    res = pd.DataFrame(index=list(range(0, 24)))
-    for i in df['day'].unique():
-        temp_df = df.loc[df['day'] == i][['views', 'hour']].set_index('hour').add_suffix(f'_{int(i)}')
-        res = pd.merge(res, temp_df, how='outer', left_index=True, right_index=True)
-    return res
-
-
-def week_stat(database: str) -> pd.DataFrame:
-    """
-    prepare dataframe with week statistic
-    :param database: postgresql database connection string
-    :return: dataftame
-    """
-    df = _get_db_data(database, quary_name='statistic_query', period='week')
-    df.loc[df['views'] < 0, ['views']] = None
-    df = df.fillna(method='backfill')
-    df['dayofweek'] = df['dayofweek'].astype(int)
-    res = pd.DataFrame(index=list(range(1, 8)))
-    for i in df['week'].unique():
-        temp_df = df.loc[df['week'] == i][[
-            'views', 'dayofweek']].set_index('dayofweek').add_suffix(f'_{int(i)}')
-        res = pd.merge(res, temp_df, how='outer', left_index=True, right_index=True)
-    return res
-
-
-def month_stat(database: str) -> pd.DataFrame:
-    """
-    prepare dataframe with month statistic
-    :param database: postgresql database connection string
-    :return: dataftame
-    """
-    df = _get_db_data(database, quary_name='statistic_query', period='month')
-    df.loc[df['views'] < 0, ['views']] = None
-    df = df.fillna(method='backfill')
-    res = pd.DataFrame(index=list(range(1, 32)))
-    for i in df['month'].unique():
-        temp_df = df.loc[df['month'] == i][[
-            'views', 'day']].set_index('day').add_suffix(f'_{int(i)}')
-        res = pd.merge(res, temp_df, how='outer', left_index=True, right_index=True)
-
-    return res
 
 
 def _make_picture(df: pd.DataFrame):
@@ -112,30 +64,24 @@ def _make_picture(df: pd.DataFrame):
     :param df:
     :return: none
     """
-    name = 'day'
+    name = df.index.name
     x_lable = 'day'
     df = df.filter(like='views')
     x = df.index.values
-    if df.shape[0] == 7:
-        name = 'week'
-    elif df.shape[0] == 31:
-        name = 'month'
-    else:
-        x_lable = 'hour'
-
+    x_lable = 'day'
+    x = df.index.values
     fig = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(111)
-    width = 3
-    for i in df.columns:
-        ax.plot(x, df[i], label=f"{name} № {i.split('_')[1]} views:{int(df[i].max() - df[i].min())} ", linewidth=width)
-        width += 5
+    width = 6
+    for column in df.filter(like='views').columns:
+        ax.plot(x, df[column], label=column.replace('_', ' '), linewidth=width)
+        width -= 3
     ax.set(xlim=[x.min(), x.max()])
-    ax.set_xlabel(x_lable, fontsize=15, )
-    ax.set_ylabel('views', fontsize=15, )
+    ax.set_xlabel(x_lable, fontsize=15)
+    ax.set_ylabel('views', fontsize=15)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
     plt.title(f"views statistic by {name}", fontsize=22)
     leg = plt.legend()
-
     plt.savefig(f'{name}.png')
 
 
@@ -145,14 +91,9 @@ def statistic_text(df: pd.DataFrame) -> str:
     :param df:
     :return: string
     """
-    name = 'day'
-    if df.shape[0] == 7:
-        name = 'week'
-    elif df.shape[0] > 27:
-        name = 'month'
     text = ''
-    for i in df.columns:
-        text += f"{name} №{i.split('_')[1]} views: {int(df[i].max() - df[i].min())} \n"
+    for i in df.filter(like='views').columns:
+        text += f"{i.replace('_', ' ')}: {int(df[i].max() - df[i].min())} \n"
     return text
 
 

@@ -9,7 +9,7 @@ from aiogram.utils import executor
 from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
 from utils import get_weather, get_ststel_data, print_ststel_info
-from youtube_utils import printer, get_yt_info, _make_picture, day_stat, week_stat, month_stat, statistic_text
+from youtube_utils import (printer, get_yt_info, _get_db_data, _make_picture, statistic_text)
 
 # local debug
 if sys.platform == 'win32':
@@ -70,8 +70,7 @@ async def worker(message):
 @dp.message_handler(regexp='day..')
 async def worker(message):
     media = types.MediaGroup()
-
-    statistic_df = day_stat(database)
+    statistic_df = _get_db_data(database, quary_name='day')
     stat = statistic_text(statistic_df)
     _make_picture(statistic_df)
     sum_stat = printer(*get_yt_info(youtube_token))
@@ -84,7 +83,7 @@ async def worker(message):
 @dp.message_handler(regexp='week..')
 async def worker(message):
     media = types.MediaGroup()
-    statistic_df = week_stat(database)
+    statistic_df = _get_db_data(database, quary_name='week')
     stat = statistic_text(statistic_df)
     _make_picture(statistic_df)
     sum_stat = printer(*get_yt_info(youtube_token))
@@ -96,13 +95,12 @@ async def worker(message):
 
 @dp.message_handler(regexp='month..')
 async def worker(message):
-    statistic_df = month_stat(database)
+    media = types.MediaGroup()
+    statistic_df = _get_db_data(database, quary_name='month')
     stat = statistic_text(statistic_df)
     _make_picture(statistic_df)
     sum_stat = printer(*get_yt_info(youtube_token))
     text = f"статистика просмотров за {statistic_df.shape[1]} месяца\n{stat}\nобщая статистика канала:\n{sum_stat}"
-    _make_picture(month_stat(database))
-    media = types.MediaGroup()
     media.attach_photo(types.InputFile('month.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
@@ -172,6 +170,5 @@ def repeat(coro, loop):
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.call_later(delay, repeat, auto_yt_check, loop)
-    # TODO араметр 3600 не работает. так как в репите свой делей и он равен 15 минутам - как в глобальном конфиге.
-    # loop.call_later(3600, repeat, count_db_rows, loop)  # every hour (3600) check rows count in table
+    loop.call_later(delay, repeat, count_db_rows, loop)
     asyncio.run(executor.start_polling(dp, loop=loop))
