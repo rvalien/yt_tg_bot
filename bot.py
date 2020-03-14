@@ -70,7 +70,7 @@ async def worker(message):
 @dp.message_handler(regexp='day..')
 async def worker(message):
     media = types.MediaGroup()
-    statistic_df = _get_db_data(database, quary_name='day')
+    statistic_df = _get_db_data(database, period='day')
     stat = statistic_text(statistic_df)
     _make_picture(statistic_df)
     sum_stat = printer(*get_yt_info(youtube_token))
@@ -83,7 +83,7 @@ async def worker(message):
 @dp.message_handler(regexp='week..')
 async def worker(message):
     media = types.MediaGroup()
-    statistic_df = _get_db_data(database, quary_name='week')
+    statistic_df = _get_db_data(database, period='week')
     stat = statistic_text(statistic_df)
     _make_picture(statistic_df)
     sum_stat = printer(*get_yt_info(youtube_token))
@@ -96,7 +96,7 @@ async def worker(message):
 @dp.message_handler(regexp='month..')
 async def worker(message):
     media = types.MediaGroup()
-    statistic_df = _get_db_data(database, quary_name='month')
+    statistic_df = _get_db_data(database, period='month')
     stat = statistic_text(statistic_df)
     _make_picture(statistic_df)
     sum_stat = printer(*get_yt_info(youtube_token))
