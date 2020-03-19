@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from matplotlib import ticker
+import datetime
+import json
 
 
 def printer(subs: int, views: int) -> str:
@@ -36,6 +38,45 @@ def get_yt_info(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (
         print(data.status_code)
 
 
+def get_yt_info_new(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (int, int):
+    """
+    :param youtube_token: youtube api token
+    :param c_id: youtube channel id
+    :return: youtube channel subscribers and sum(all videos views)
+    """
+
+    url = f"https://www.googleapis.com/youtube/v3/channels?part=statistics&id={c_id}&key={youtube_token}"
+    data = requests.get(url)
+    if data.status_code == 200:
+        subs = int(data.json()['items'][0]['statistics']['subscriberCount'])
+        views = int(data.json()['items'][0]['statistics']['viewCount'])
+        return data.json()
+    else:
+        print(data.status_code)
+
+
+def write_data(database, request_data):
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
+#     time = datetime.datetime.utcnow().time()
+#     date = datetime.datetime.utcnow().date()
+    time = datetime.datetime.now().time()
+    date = datetime.datetime.now().date()
+    statistics = request_data.get("items")[0].get("statistics")
+    table = 'channel_statistics'
+    # insert / update
+    query = f'''
+    insert into {table} (stat_date, hour_{time.hour})
+    values('{date.strftime('%Y-%m-%d')}', '{json.dumps(statistics)}')
+    ON CONFLICT (stat_date)
+    DO UPDATE SET hour_{time.hour} = '{json.dumps(statistics)}'
+    WHERE {table}.stat_date = '{date.strftime('%Y-%m-%d')}'
+    and {table}.hour_{time.hour} is null '''
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+
+
 def _get_db_data(database: str, query_name: str = 'statistic_query', period: str = None) -> pd.DataFrame:
     """
     :param database: postgresql database connection string
@@ -65,9 +106,7 @@ def _make_picture(df: pd.DataFrame):
     :return: none
     """
     name = df.index.name
-    x_lable = 'day'
     df = df.filter(like='views')
-    x = df.index.values
     x_lable = 'day'
     x = df.index.values
     fig = plt.figure(figsize=(10, 5))

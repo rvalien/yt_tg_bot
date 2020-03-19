@@ -9,7 +9,7 @@ from aiogram.utils import executor
 from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
 from utils import get_weather, get_ststel_data, print_ststel_info
-from youtube_utils import (printer, get_yt_info, _get_db_data, _make_picture, statistic_text)
+from youtube_utils import printer, get_yt_info, _get_db_data, _make_picture, statistic_text, get_yt_info_new, write_data
 
 # local debug
 if sys.platform == 'win32':
@@ -135,6 +135,8 @@ async def auto_yt_check(send=True):
                        values('{current_subs}', '{current_view}', now())''')
     conn.commit()
     conn.close()
+    response = get_yt_info_new(youtube_token)
+    write_data(database, response)
 
     if send:
         if night_to < now < night_from:
