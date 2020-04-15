@@ -55,15 +55,12 @@ def get_yt_info_new(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') 
         print(data.status_code)
 
 
-def write_data(database, request_data):
+def write_data(database, request_data, table='channel_statistics'):
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
-#     time = datetime.datetime.utcnow().time()
-#     date = datetime.datetime.utcnow().date()
     time = datetime.datetime.now().time()
     date = datetime.datetime.now().date()
     statistics = request_data.get("items")[0].get("statistics")
-    table = 'channel_statistics'
     # insert / update
     query = f'''
     insert into {table} (stat_date, hour_{time.hour})
@@ -99,6 +96,16 @@ def _get_db_data(database: str, query_name: str = 'statistic_query', period: str
     return df
 
 
+def _get_db_data_new(database, n_days=1) -> pd.DataFrame:
+    conn = psycopg2.connect(database)
+    result = pd.DataFrame()
+    for i in range(0, n_days):
+        df = pd.read_sql(get_day_stat_query(i), conn)
+        df = df.set_index(df.columns[0]).dropna().astype(int)
+        result = pd.concat([df, result], axis = 1, sort=False)
+    return result
+
+
 def _make_picture(df: pd.DataFrame):
     """
     make picture and save to .
@@ -124,6 +131,24 @@ def _make_picture(df: pd.DataFrame):
     plt.savefig(f'{name}.png')
 
 
+def _make_picture_new(df: pd.DataFrame):
+    name = df.index.name
+    x = df.index.values
+    fig = plt.figure(figsize=(10, 5))
+    ax = fig.add_subplot(111)
+    width = 3
+    for column in df.columns:
+        ax.plot(x, df[column], label=column, linewidth=width)
+        width += 3
+    ax.set(xlim=[x.min(), x.max()])
+    ax.set_xlabel(name, fontsize=15)
+    ax.set_ylabel('views', fontsize=15)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    plt.title(f"views statistic by {name}", fontsize=22)
+    leg = plt.legend()
+    plt.savefig(f'{name}.png')
+
+
 def statistic_text(df: pd.DataFrame) -> str:
     """
     count views from dataframe adn format it to string
@@ -134,6 +159,16 @@ def statistic_text(df: pd.DataFrame) -> str:
     for i in df.filter(like='views').columns:
         text += f"{i.replace('_', ' ')}: {int(df[i].max() - df[i].min())} \n"
     return text
+
+
+def get_day_stat_query(day_depth=0):
+    date = datetime.datetime.now().date() - datetime.timedelta(day_depth)
+    columns = ', '.join(list(map(lambda x: f"{x}\n", range(0, 24))))
+    values = ', '.join(list(map(lambda x: f"hour_{x} ->> 'viewCount'\n", range(0, 24))))
+    query = f"""select unnest(array[{columns}]) as hour, unnest(array[{values}]) as "{date}"
+    from channel_statistics cs 
+    where stat_date = current_date - {day_depth} """
+    return query
 
 
 if __name__ == '__main__':

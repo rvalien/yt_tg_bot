@@ -35,7 +35,7 @@ conn = psycopg2.connect(database)
 cursor = conn.cursor()
 
 chat_ids = []
-cursor.execute('select chat_id from chat_ids')
+cursor.execute('select chat_id from users')
 for item in cursor.fetchall():
     chat_ids.append(item[0])
 
@@ -111,7 +111,7 @@ async def worker(message):
     await types.ChatActions.typing(2)
     conn = psycopg2.connect(database)
     cursor = conn.cursor()
-    cursor.execute(f"select phone, password from ststel where chat_id = {message['from']['id']}")
+    cursor.execute(f"select phone, password from users where chat_id = {message['from']['id']}")
     res = cursor.fetchone()
 
     await message.reply(str(print_ststel_info(get_ststel_data(*res))))
