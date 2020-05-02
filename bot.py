@@ -9,7 +9,9 @@ from aiogram.utils import executor
 from aiogram.types import KeyboardButton
 from aiogram.dispatcher import Dispatcher
 from utils import get_weather, get_ststel_data, print_ststel_info
-from youtube_utils import printer, get_yt_info, _get_db_data, _make_picture, statistic_text, get_yt_info_new, write_data
+from youtube_utils import (printer, get_yt_info, _get_db_data, _get_db_data_new, _make_picture,
+                           _make_picture_new, statistic_text,
+                           get_yt_info_new, write_data)
 
 # local debug
 if sys.platform == 'win32':
@@ -47,6 +49,7 @@ conn.close()
 markup = types.ReplyKeyboardMarkup()
 markup.row(
     KeyboardButton('day 📈'),
+    KeyboardButton('day_new 📈'),
     KeyboardButton('week 📈'),
     KeyboardButton('month 📅')
 )
@@ -75,7 +78,20 @@ async def worker(message):
     _make_picture(statistic_df)
     sum_stat = printer(*get_yt_info(youtube_token))
     text = f"статистика просмотров за {statistic_df.shape[1]} дня\n{stat}\nобщая статистика канала:\n{sum_stat}"
-    media.attach_photo(types.InputFile('day.png'), text)
+    media.attach_photo(types.InputFile('hour.png'), text)
+    await types.ChatActions.upload_photo()
+    await message.reply_media_group(media=media)
+
+
+@dp.message_handler(regexp='day_new..')
+async def worker(message):
+    media = types.MediaGroup()
+    statistic_df = _get_db_data_new(2)
+    stat = statistic_text(statistic_df)
+    _make_picture_new(statistic_df.diff(-1).apply(abs))
+    sum_stat = printer(*get_yt_info(youtube_token))
+    text = f"статистика просмотров за {statistic_df.shape[1]} дня\n{stat}\nобщая статистика канала:\n{sum_stat}"
+    media.attach_photo(types.InputFile('hour.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
 

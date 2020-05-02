@@ -133,15 +133,16 @@ def _make_picture(df: pd.DataFrame):
 
 def _make_picture_new(df: pd.DataFrame):
     name = df.index.name
+    x_label = df.index.name
     x = df.index.values
     fig = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(111)
     width = 3
     for column in df.columns:
         ax.plot(x, df[column], label=column, linewidth=width)
-        width += 3
+        width += 2
     ax.set(xlim=[x.min(), x.max()])
-    ax.set_xlabel(name, fontsize=15)
+    ax.set_xlabel(x_label, fontsize=15)
     ax.set_ylabel('views', fontsize=15)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
     plt.title(f"views statistic by {name}", fontsize=22)
