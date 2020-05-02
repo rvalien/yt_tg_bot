@@ -49,7 +49,7 @@ conn.close()
 markup = types.ReplyKeyboardMarkup()
 markup.row(
     KeyboardButton('day 📈'),
-    KeyboardButton('day_new 📈'),
+    KeyboardButton('dnew 📈'),
     KeyboardButton('week 📈'),
     KeyboardButton('month 📅')
 )
@@ -78,15 +78,15 @@ async def worker(message):
     _make_picture(statistic_df)
     sum_stat = printer(*get_yt_info(youtube_token))
     text = f"статистика просмотров за {statistic_df.shape[1]} дня\n{stat}\nобщая статистика канала:\n{sum_stat}"
-    media.attach_photo(types.InputFile('hour.png'), text)
+    media.attach_photo(types.InputFile('day.png'), text)
     await types.ChatActions.upload_photo()
     await message.reply_media_group(media=media)
 
 
-@dp.message_handler(regexp='day_new..')
+@dp.message_handler(regexp='dnew..')
 async def worker(message):
     media = types.MediaGroup()
-    statistic_df = _get_db_data_new(2)
+    statistic_df = _get_db_data_new(database, n_days=2)
     stat = statistic_text(statistic_df)
     _make_picture_new(statistic_df.diff(-1).apply(abs))
     sum_stat = printer(*get_yt_info(youtube_token))

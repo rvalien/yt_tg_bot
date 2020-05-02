@@ -96,13 +96,13 @@ def _get_db_data(database: str, query_name: str = 'statistic_query', period: str
     return df
 
 
-def _get_db_data_new(database, n_days=1) -> pd.DataFrame:
+def _get_db_data_new(database: str, n_days: int = 1) -> pd.DataFrame:
     conn = psycopg2.connect(database)
     result = pd.DataFrame()
     for i in range(0, n_days):
         df = pd.read_sql(get_day_stat_query(i), conn)
         df = df.set_index(df.columns[0]).dropna().astype(int)
-        result = pd.concat([df, result], axis = 1, sort=False)
+        result = pd.concat([df, result], axis=1, sort=False)
     return result
 
 
