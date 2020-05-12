@@ -46,13 +46,14 @@ print(chat_ids)
 print("-" * 30)
 print("collect last database data")
 
-with open("./sql_queries/max_db_subs.sql") as q:
-    max_db_subs = q.read()
+with open("sql_queries/max_db_data.sql") as q:
+    max_db_data = q.read()
 
-cursor.execute(max_db_subs)
-subscribers = cursor.fetchone()
-subscribers = int(subscribers[0])
-print("subscribers:", subscribers)
+cursor.execute(max_db_data)
+last_check_hour, views, subscribers = map(int, cursor.fetchone())
+
+print("subscribers:", subscribers, type(subscribers))
+print("last_check_hour:", last_check_hour, type(last_check_hour))
 print("-" * 30)
 conn.close()
 print("done")
@@ -138,23 +139,24 @@ async def auto_yt_check(send=True):
     current_subs = int(response.get("items")[0].get("statistics").get("subscriberCount"))
     connection = psycopg2.connect(database)
     cursor = connection.cursor()
-    with open("./sql_queries/max_db_subs.sql") as sql_file:
+    with open("sql_queries/max_db_data.sql") as sql_file:
         query = sql_file.read()
 
     cursor.execute(query)
-    db_subs = cursor.fetchone()
-    db_subs = int(db_subs[0])
+    db_hour, db_views, db_subs = map(int, cursor.fetchone())
     conn.close()
     write_data(database, response)
     if send:
-        if night_to < datetime.datetime.utcnow().time() < night_from:
-            if db_subs == current_subs:
-                print(current_subs, db_subs)
+        if night_to < datetime.datetime.now().time() < night_from:
+            if db_subs == current_subs or datetime.datetime.now().hour == db_hour:
+                print(f'database: hour{db_hour}, subscribers:{db_subs}')
+                print(f'cur time: hour{datetime.datetime.now().hour}, subscribers:{current_subs}')
                 pass
             else:
                 for chat_id in chat_ids:
                     await bot.send_message(
                         chat_id,
+                        # два пробела тут, что бы выравнять по строки --> <--
                         str(f"Изменеие в количестве подписчиков.\nбыло:  {db_subs}\nстало: {current_subs}")
                     )
 

@@ -118,11 +118,11 @@ def prepare_text(dataframe, json_response) -> str:
     df_text = ""
     for i in dataframe.columns:
         df_text += f"{i.replace('_', ' ')}: {int(dataframe[i].max() - dataframe[i].min())} \n"
-
     sum_stat = f"""
     {json_response.get("items")[0].get("statistics").get("subscriberCount")} подписчиков\n
     {json_response.get("items")[0].get("statistics").get("viewCount")} просмотов"""
-    text = f"статистика просмотров за {dataframe.shape[1]} недели\n{df_text}\nобщая статистика канала:\n{sum_stat}"
+    # TODO поправить функцию что бы она дала корректный тест
+    text = f"статистика просмотров за {dataframe.shape[1]} {dataframe.index}\n{df_text}\nобщая статистика канала:\n{sum_stat}"
     return text
 
 
