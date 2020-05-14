@@ -148,12 +148,14 @@ async def auto_yt_check(send=True):
     write_data(database, response)
     if send:
         if night_to < datetime.datetime.now().time() < night_from:
+            print('x'* 10)
             print(f'database: hour: {db_hour}, subscribers: {db_subs}')
             print(f'cur time: hour: {datetime.datetime.now().hour}, subscribers: {current_subs}')
             if db_subs == current_subs or datetime.datetime.now().hour == db_hour:
                 print('pass')
                 pass
             else:
+                print('work')
                 for chat_id in chat_ids:
                     await bot.send_message(
                         chat_id,
