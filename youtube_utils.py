@@ -114,15 +114,16 @@ def make_picture(df: pd.DataFrame):
     plt.savefig(f'{name}.png')
 
 
-def prepare_text(dataframe, json_response) -> str:
-    df_text = ""
-    for i in dataframe.columns:
-        df_text += f"{i.replace('_', ' ')}: {int(dataframe[i].max() - dataframe[i].min())} \n"
+def prepare_text(database, json_response) -> str:
+    conn = psycopg2.connect(database)
+    with open("./sql_queries/today_stat_for_text.sql") as q:
+        query = q.read()
+    res = pd.read_sql(query, conn)
+    today_text = f"за {res.loc[0]['date']}\nпросмотров:{res.loc[0]['views']}\nподписчиков: {res.loc[0]['subs']}"
     sum_stat = f"""
-    {json_response.get("items")[0].get("statistics").get("subscriberCount")} подписчиков\n
-    {json_response.get("items")[0].get("statistics").get("viewCount")} просмотов"""
-    # TODO поправить функцию что бы она дала корректный тест
-    text = f"статистика просмотров за {dataframe.shape[1]} {dataframe.index}\n{df_text}\nобщая статистика канала:\n{sum_stat}"
+{json_response.get("items")[0].get("statistics").get("subscriberCount")} подписчиков
+{json_response.get("items")[0].get("statistics").get("viewCount")} просмотов"""
+    text = f"{today_text}\n\nобщая статистика канала:{sum_stat}"
     return text
 
 
