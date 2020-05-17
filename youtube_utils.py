@@ -119,7 +119,7 @@ def prepare_text(database, json_response) -> str:
     with open("./sql_queries/today_stat_for_text.sql") as q:
         query = q.read()
     res = pd.read_sql(query, conn)
-    today_text = f"за {res.loc[0]['date']}\nпросмотров:{res.loc[0]['views']}\nподписчиков: {res.loc[0]['subs']}"
+    today_text = f"за {res.loc[0]['date']}\nпросмотров: {res.loc[0]['views']}\nподписчиков: {res.loc[0]['subs']}"
     sum_stat = f"""
 {json_response.get("items")[0].get("statistics").get("subscriberCount")} подписчиков
 {json_response.get("items")[0].get("statistics").get("viewCount")} просмотов"""
