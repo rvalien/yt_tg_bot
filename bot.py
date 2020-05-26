@@ -127,7 +127,7 @@ async def worker(message):
     await message.reply(str(print_ststel_info(get_ststel_data(*res))))
 
 
-async def auto_yt_check(send=True):
+async def auto_yt_check(send=False):
     """
     check youtube subscribers and sand message every <daley> seconds if new counts not the same as last count
     add check result to log data
