@@ -71,7 +71,7 @@ markup.row("📱 internet 🌐")
 @dp.message_handler(commands=["start"])
 async def send_welcome(message: types.Message):
     await types.ChatActions.typing(1)
-    await message.reply("Привет, я GladOS. я умею показывать статистику просмотров видео youtube канала\n ",
+    await message.reply("Привет, я GladOS. я умею показывать статистику просмотров видео youtube канала\n",
                         reply_markup=markup)
 
 
@@ -125,6 +125,13 @@ async def worker(message):
     cursor.execute(f"select phone, password from users where chat_id = {message['from']['id']}")
     res = cursor.fetchone()
     await message.reply(str(print_ststel_info(get_ststel_data(*res))))
+
+
+@dp.message_handler(regexp="myid")
+async def worker(message):
+    await types.ChatActions.typing(2)
+    print(message.from_user)
+    await message.reply(message.from_user)
 
 
 async def auto_yt_check(send=False):
