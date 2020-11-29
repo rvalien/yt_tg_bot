@@ -1,6 +1,6 @@
 with
-raw as (select hour, views, subscribers
-    from (select unnest(array['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']) as hour,
+raw as (select stat_date, hour, views, subscribers
+    from (select stat_date, unnest(array['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']) as hour,
     unnest(array[
     hour_0 ->> 'viewCount', hour_1 ->> 'viewCount', hour_2 ->> 'viewCount', hour_3 ->> 'viewCount', hour_4 ->> 'viewCount', hour_5 ->> 'viewCount', hour_6 ->> 'viewCount',
     hour_7 ->> 'viewCount', hour_8 ->> 'viewCount', hour_9 ->> 'viewCount', hour_10 ->> 'viewCount', hour_11 ->> 'viewCount', hour_12 ->> 'viewCount', hour_13 ->> 'viewCount',
@@ -12,8 +12,7 @@ raw as (select hour, views, subscribers
     hour_14 ->> 'subscriberCount', hour_15 ->> 'subscriberCount', hour_16 ->> 'subscriberCount', hour_17 ->> 'subscriberCount', hour_18 ->> 'subscriberCount', hour_19 ->> 'subscriberCount', hour_20 ->> 'subscriberCount',
     hour_21 ->> 'subscriberCount', hour_22 ->> 'subscriberCount', hour_23 ->> 'subscriberCount']) as subscribers
     from channel_statistics cs
---     where stat_date = current_date
     ) too_raw
 )
-select hour::int, views::int, subscribers::int from raw
+select stat_date::date, hour::int, views::int, subscribers::int from raw
 where views = (select max(views) from raw)
