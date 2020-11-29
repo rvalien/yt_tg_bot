@@ -136,7 +136,7 @@ async def worker(message):
     def get_all_mobile_bills(all_users):
         result = dict()
         for user in all_users:
-            result[item[2]] = get_ststel_data(user[0], user[1])
+            result[user[2]] = get_ststel_data(user[0], user[1])
         return result
 
     def prepare_response_text(data):
