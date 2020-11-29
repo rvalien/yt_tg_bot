@@ -60,20 +60,17 @@ conn.close()
 print("done")
 
 markup = types.ReplyKeyboardMarkup()
-markup.row(
-    KeyboardButton("day 📈"),
-    KeyboardButton("week 📈"),
-    KeyboardButton("month 📅")
-)
+markup.row(KeyboardButton("day 📈"), KeyboardButton("week 📈"), KeyboardButton("month 📅"))
 markup.row("🌤 weather 🌧")
-markup.row("📱 internet 🌐")
+markup.row(KeyboardButton("📱 internet 🌐"), KeyboardButton("📱 bill 🌐"))
 
 
 @dp.message_handler(commands=["start"])
 async def send_welcome(message: types.Message):
     await types.ChatActions.typing(1)
-    await message.reply("Привет, я GladOS. я умею показывать статистику просмотров видео youtube канала\n",
-                        reply_markup=markup)
+    await message.reply(
+        "Привет, я GladOS. я умею показывать статистику просмотров видео youtube канала\n", reply_markup=markup
+    )
 
 
 @dp.message_handler(regexp="day..")
@@ -128,6 +125,30 @@ async def worker(message):
     await message.reply(str(print_ststel_info(get_ststel_data(*res))))
 
 
+@dp.message_handler(regexp="..bill..")
+async def worker(message):
+    await types.ChatActions.typing(2)
+    conn = psycopg2.connect(database)
+    cursor = conn.cursor()
+    cursor.execute("select phone, password, name from users")
+    res = cursor.fetchall()
+
+    def get_all_mobile_bills(all_users):
+        result = dict()
+        for item in all_users:
+            result[item[2]] = get_ststel_data(item[0], item[1])
+        return result
+
+    def prepare_response_text(data):
+        temp_list = list()
+        for key in data.keys():
+            temp = f'{key}: {data[key].get("effectiveBalance") if data[key].get("effectiveBalance") else data[key].get("balance")}'
+            temp_list.append(temp)
+        return "\n".join(temp_list)
+
+    await message.reply(prepare_response_text(get_all_mobile_bills(res)))
+
+
 @dp.message_handler(regexp="myid")
 async def worker(message):
     await types.ChatActions.typing(2)
@@ -156,19 +177,19 @@ async def auto_yt_check(send=False):
     write_data(database, response)
     if send:
         if night_to < datetime.datetime.now().time() < night_from:
-            print('x' * 10)
-            print(f'database: hour: {db_hour}, subscribers: {db_subs}')
-            print(f'cur time: hour: {datetime.datetime.now().hour}, subscribers: {current_subs}')
+            print("x" * 10)
+            print(f"database: hour: {db_hour}, subscribers: {db_subs}")
+            print(f"cur time: hour: {datetime.datetime.now().hour}, subscribers: {current_subs}")
             if db_subs == current_subs or datetime.datetime.now().hour == db_hour:
-                print('pass')
+                print("pass")
                 pass
             else:
-                print('work')
+                print("work")
                 for chat_id in chat_ids:
                     await bot.send_message(
                         chat_id,
                         # два пробела тут, что бы выравнять по строки --> <--
-                        str(f"Изменеие в количестве подписчиков.\nбыло:  {db_subs}\nстало: {current_subs}")
+                        str(f"Изменеие в количестве подписчиков.\nбыло:  {db_subs}\nстало: {current_subs}"),
                     )
 
 
@@ -193,7 +214,7 @@ def repeat(coro, loop):
     loop.call_later(delay, repeat, coro, loop)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.call_later(delay, repeat, auto_yt_check, loop)
     loop.call_later(delay, repeat, count_db_rows, loop)

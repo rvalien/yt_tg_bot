@@ -34,16 +34,23 @@ def get_ststel_data(login: str, password: str) -> dict:
             print(i)
             r = s.post(url, data=payload, headers=header)
             if r.status_code != 200:
-                return f'ошибка авторизации {r.status_code}'
+                return f'ошибка авторизации {r.status_code} {r.text}'
             else:
                 foo = r.json()['customers']
                 if len(foo) != 1:
-                    print('проверь код')
+                    print(f"error: {foo=}, {len(foo)=}")
                 else:
                     foo = foo[0]
                     a, b = foo['ctnInfo']['balance'], foo['ctnInfo']['rest_internet_current']
                 i += 1
         return foo['ctnInfo']
+
+
+def get_all_mobile_bills(all_users):
+    result = dict()
+    for item in all_users:
+        result[item[0]] = get_ststel_data(**item)
+    return result
 
 
 def print_ststel_info(data: dict) -> str:
