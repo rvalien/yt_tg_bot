@@ -50,7 +50,8 @@ with open("sql_queries/max_db_data.sql") as q:
     max_db_data = q.read()
 
 cursor.execute(max_db_data)
-last_check_date, last_check_hour, views, subscribers = map(int, cursor.fetchone())
+last_check_date, last_check_hour, views, subscribers = cursor.fetchone()
+last_check_hour, views, subscribers = map(int, (last_check_hour, views, subscribers))
 
 print("subscribers:", subscribers, type(subscribers))
 print("last_check_hour:", last_check_hour, type(last_check_hour))
