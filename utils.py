@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import random
 import requests
 
 
@@ -73,6 +74,39 @@ def print_ststel_info(data: dict) -> str:
         balans = data['balance'], data['effectiveBalance']
 
     return f'''Осталось {internet} {i}. Баланс: {balans} р. '''
+
+
+def free_time(message, redis_client) -> str:
+
+    """
+    :return: short string
+    """
+    # TODO прототип для изучения редис. Переписать на использование списков
+    keyword = "exp2"
+    opportunities = ["книга", "покер", "шахматная доска", "ванна", "сон", "дуэлька"]
+
+    if redis_client.get(keyword) is None:
+        redis_client.set(keyword, ", ".join(opportunities))
+
+    base = redis_client.get(keyword)
+    param = message.text.split("/time ")
+
+    if param == ['/time']:
+        opportunity = random.choice(base.split(", "))
+
+        return f"Тебя ждёт {opportunity.decode()}"
+
+    else:
+        if param[-1] == "all":
+            return f"Весь список:\n{redis_client.get(keyword).decode()}"
+
+        elif len(param[-1]) > 0:
+            base = ", ".join([base.decode(), param[-1]])
+            redis_client.set(keyword, base)
+
+            return f"{param[-1]} добавлено в список."
+        else:
+            return 'ничего не понял.'
 
 
 if __name__ == '__main__':
