@@ -94,7 +94,7 @@ def free_time(message, redis_client) -> str:
     if param == ['/time']:
         opportunity = random.choice(base.decode().split(", "))
 
-        return f"Тебя ждёт {opportunity.decode()}"
+        return f"Тебя ждёт {opportunity}"
 
     else:
         if param[-1] == "all":
