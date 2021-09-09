@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib import ticker
 
 
-def get_yt(youtube_token: str, c_id: str = 'UCawxRTnNrCPlXHJRttupImA') -> (int, int):
+def get_yt(youtube_token: str, c_id: str) -> (int, int):
     """
     :param youtube_token: youtube api token
     :param c_id: youtube channel id
